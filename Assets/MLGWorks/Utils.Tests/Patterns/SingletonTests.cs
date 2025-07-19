@@ -3,7 +3,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace MLGWorks.Utility.Tests
+namespace MLGWorks.Utils.Patterns.Tests
 {
     public class SingletonTests
     {

@@ -1,5 +1,5 @@
 {
-    "name": "MLGWorks.Utility.Tests",
+    "name": "MLGWorks.Utils.Tests",
     "rootNamespace": "",
     "references": [
         "GUID:9440d5481d78b0e4a9bc9fd7ede8c8bc",

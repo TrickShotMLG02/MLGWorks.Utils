@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace MLGWorks.Utility
+namespace MLGWorks.Utils.Patterns
 {
     /// <summary>
     /// Provides a generic base class for implementing the singleton pattern in Unity.
