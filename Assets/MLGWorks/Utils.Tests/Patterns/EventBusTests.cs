@@ -1,7 +1,7 @@
+using MLGWorks.Utils.Patterns;
 using NUnit.Framework;
-using System.Collections;
 
-namespace MLGWorks.Utils.Patterns.Tests
+namespace MLGWorks.Utils.Tests.Patterns
 {
     public class EventBusTests
     {

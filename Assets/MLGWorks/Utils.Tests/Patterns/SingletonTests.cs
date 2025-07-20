@@ -1,10 +1,17 @@
 using System.Collections;
+using MLGWorks.Utils.Patterns;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace MLGWorks.Utils.Patterns.Tests
+namespace MLGWorks.Utils.Tests.Patterns
 {
+    public class TestEvent : IEvent
+    {
+        public string Name => nameof(TestEvent);
+        public int Value { get; set; }
+    }
+
     public class SingletonTests
     {
         private class TestSingleton : Singleton<TestSingleton>
