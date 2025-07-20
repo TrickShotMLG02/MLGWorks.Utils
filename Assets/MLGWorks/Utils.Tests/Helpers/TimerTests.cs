@@ -1,7 +1,7 @@
 using NUnit.Framework;
-using MLGWorks.Utils.Patterns;
+using MLGWorks.Utils.Helpers;
 
-namespace MLGWorks.Utils.Tests.Patterns
+namespace MLGWorks.Utils.Tests.Helpers
 {
     public class TimerTests
     {

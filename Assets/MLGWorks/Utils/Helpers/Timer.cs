@@ -1,6 +1,6 @@
 using System;
 
-namespace MLGWorks.Utils.Patterns
+namespace MLGWorks.Utils.Helpers
 {
     /// <summary>
     /// A utility class for handling simple countdown timers with pause/resume functionality.
