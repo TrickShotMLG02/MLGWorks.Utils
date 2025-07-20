@@ -3,6 +3,21 @@ using System.Collections.Generic;
 
 namespace MLGWorks.Utils.Patterns
 {
+    #region Interfaces
+
+    /// <summary>
+    /// Represents an event in the event bus system.
+    /// </summary>
+    public interface IEvent
+    {
+        /// <summary>
+        /// Gets the name of the event.
+        /// </summary>
+        string Name { get; }
+    }
+
+    #endregion Interfaces
+
     /// <summary>
     /// A static event bus for subscribing to, unsubscribing from, and publishing events of various types.
     /// Allows decoupled communication between event publishers and subscribers.
