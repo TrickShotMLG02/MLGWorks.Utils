@@ -72,6 +72,12 @@ namespace MLGWorks.Utils.Logging
         private bool isHandlingUnityLog = false;
         private bool isShuttingDown = false;
 
+        /// <summary>
+        /// Event triggered when a new batch of logs is ready to be processed.
+        /// Useful if one wants to extract the logs and display them in a custom UI or process them differently.
+        /// </summary>
+        public event Action<List<string>> OnNewLogBatch;
+
         protected override void Awake()
         {
             base.Awake();
@@ -131,7 +137,7 @@ namespace MLGWorks.Utils.Logging
             CleanupOldLogFiles();
         }
 
-        public void EmitTestLogs()
+        public static void EmitTestLogs()
         {
             Logger.Debug("This is a test Debug log.");
             Logger.Info("This is a test Info log.");
@@ -250,6 +256,8 @@ namespace MLGWorks.Utils.Logging
 
         private void Flush()
         {
+            var newLogs = new List<string>();
+
             while (logQueue.TryDequeue(out var e))
             {
                 string line = $"[{e.Timestamp:HH:mm:ss.fff}] [{e.Level}] {e.Message}";
@@ -276,6 +284,13 @@ namespace MLGWorks.Utils.Logging
                         catch { /* Ignore write errors */ }
                     }
                 }
+
+                newLogs.Add(line);
+            }
+
+            if (newLogs.Count > 0)
+            {
+                OnNewLogBatch?.Invoke(newLogs);
             }
         }
 
