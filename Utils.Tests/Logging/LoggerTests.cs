@@ -19,6 +19,11 @@ namespace MLGWorks.Utils.Tests.Logging
         [OneTimeSetUp]
         public void OneTimeSetup()
         {
+        }
+
+        [SetUp]
+        public void Setup()
+        {
             // Create a new GameObject and add Logger component
             var go = new GameObject("LoggerTestObject");
             logger = go.AddComponent<Logger>();
@@ -31,6 +36,9 @@ namespace MLGWorks.Utils.Tests.Logging
             logger.customPath = customLogDir;
             logger.relativePath = "";
 
+            // Reset pruning to default before each test
+            logger.maxLogFileCount = 10;
+
             logDir = logger.LogDirectory;
             fileExt = logger.fileExtension;
 
@@ -40,24 +48,27 @@ namespace MLGWorks.Utils.Tests.Logging
             Directory.CreateDirectory(logDir);
         }
 
-        [SetUp]
-        public void Setup()
-        {
-            // Reset pruning to default before each test
-            logger.maxLogFileCount = 10;
-        }
-
-        [TearDown]
-        public void CleanupLogs()
+        [UnityTearDown]
+        public IEnumerator CleanupLogs()
         {
             var logger = UnityEngine.Object.FindObjectOfType<Logger>();
-            if (logger == null) return;
+            if (logger == null) yield break;
 
             string logDir = logger.LogDirectory;
+            string ext = logger.fileExtension;
+
+#if UNITY_EDITOR
+            logger.FlushAndShutdown();
+#endif
+            yield return null;
+
+            UnityEngine.Object.DestroyImmediate(logger.gameObject);
+
+            yield return null;
 
             if (Directory.Exists(logDir))
             {
-                var files = Directory.GetFiles(logDir, $"*{logger.fileExtension}");
+                var files = Directory.GetFiles(logDir, $"*{ext}");
                 foreach (var file in files)
                 {
                     try
@@ -189,6 +200,30 @@ namespace MLGWorks.Utils.Tests.Logging
                 yield return null;
 
             Assert.LessOrEqual(logCount, maxLogs * 2, "Possible infinite log recursion detected");
+        }
+
+        [Test]
+        public void StaticLogging_WorksWithoutLoggerInstance()
+        {
+            // Ensure no Logger exists in the scene
+            var existingLogger = UnityEngine.Object.FindObjectOfType<Logger>();
+            if (existingLogger != null)
+                UnityEngine.Object.DestroyImmediate(existingLogger.gameObject);
+
+            // Expect Unity fallback log output
+            LogAssert.Expect(LogType.Log, "[DEBUG] Static debug message");
+            LogAssert.Expect(LogType.Log, "Static info message");
+            LogAssert.Expect(LogType.Warning, "Static warning message");
+            LogAssert.Expect(LogType.Error, "Static error message");
+
+            // These should go through UnityEngine.Debug if no Logger is initialized
+            Logger.Debug("Static debug message");
+            Logger.Info("Static info message");
+            Logger.Warning("Static warning message");
+            Logger.Error("Static error message");
+
+            // Debug logs may be conditionally suppressed, but test if needed
+            Logger.Debug("Static debug message");
         }
 
         private string ExtractTimestampFromFilename(string filename)

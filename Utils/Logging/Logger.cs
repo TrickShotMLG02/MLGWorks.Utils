@@ -33,6 +33,7 @@ namespace MLGWorks.Utils.Logging
 
         [Header("Logging Options")]
         public bool enableDebugLogging = true;
+        public bool logToUnityConsole = true;
 
         [Tooltip("-1 = keep all files")]
         public int maxLogFileCount = 10;
@@ -48,19 +49,15 @@ namespace MLGWorks.Utils.Logging
         public int warningTargets = (1 << 2) | (1 << 4);
         public int errorTargets = (1 << 3) | (1 << 4);
 
-        public string LogDirectory
-        {
-            get
+        public string LogDirectory => Path.Combine(
+            pathType switch
             {
-                string basePath = pathType switch
-                {
-                    LogLocationType.DataPath => Application.dataPath,
-                    LogLocationType.Custom => customPath,
-                    _ => Application.persistentDataPath
-                };
-                return Path.Combine(basePath, relativePath);
-            }
-        }
+                LogLocationType.DataPath => Application.dataPath,
+                LogLocationType.Custom => customPath,
+                _ => Application.persistentDataPath
+            },
+            relativePath
+        );
 
         private struct LogEntry
         {
@@ -73,11 +70,11 @@ namespace MLGWorks.Utils.Logging
         private readonly Dictionary<int, StreamWriter> writers = new();
         private bool initialized;
         private bool isHandlingUnityLog = false;
+        private bool isShuttingDown = false;
 
         protected override void Awake()
         {
             base.Awake();
-            // Lazy initialization will occur when logging happens
         }
 
         private void EnsureInitialized()
@@ -119,7 +116,7 @@ namespace MLGWorks.Utils.Logging
                     _ => "unknown"
                 };
                 string filename = $"{ts}_{name}{fileExtension}";
-                var path = Path.Combine(LogDirectory, filename);
+                string path = Path.Combine(LogDirectory, filename);
                 try
                 {
                     writers[i] = new StreamWriter(path, append: true) { AutoFlush = true };
@@ -144,7 +141,7 @@ namespace MLGWorks.Utils.Logging
 
         private void UnityLogHook(string condition, string stackTrace, LogType type)
         {
-            if (isHandlingUnityLog) return;
+            if (isHandlingUnityLog || isShuttingDown) return;
 
             try
             {
@@ -178,11 +175,16 @@ namespace MLGWorks.Utils.Logging
 
         protected override void OnDestroy()
         {
+            isShuttingDown = true;
             base.OnDestroy();
             Shutdown();
         }
 
-        private void OnApplicationQuit() => Shutdown();
+        private void OnApplicationQuit()
+        {
+            isShuttingDown = true;
+            Shutdown();
+        }
 
         private void Shutdown()
         {
@@ -199,15 +201,52 @@ namespace MLGWorks.Utils.Logging
 
         public static void Debug(string msg)
         {
-            if (Instance.enableDebugLogging)
-                Instance.Enqueue(LogLevel.Debug, msg);
+            try
+            {
+                if (Instance.enableDebugLogging)
+                    Instance.Enqueue(LogLevel.Debug, msg);
+            }
+            catch (InvalidOperationException)
+            {
+                UnityEngine.Debug.Log("[DEBUG] " + msg);
+            }
         }
 
-        public static void Info(string msg) => Instance.Enqueue(LogLevel.Info, msg);
+        public static void Info(string msg)
+        {
+            try
+            {
+                Instance.Enqueue(LogLevel.Info, msg);
+            }
+            catch (InvalidOperationException)
+            {
+                UnityEngine.Debug.Log(msg);
+            }
+        }
 
-        public static void Warning(string msg) => Instance.Enqueue(LogLevel.Warning, msg);
+        public static void Warning(string msg)
+        {
+            try
+            {
+                Instance.Enqueue(LogLevel.Warning, msg);
+            }
+            catch (InvalidOperationException)
+            {
+                UnityEngine.Debug.LogWarning(msg);
+            }
+        }
 
-        public static void Error(string msg) => Instance.Enqueue(LogLevel.Error, msg);
+        public static void Error(string msg)
+        {
+            try
+            {
+                Instance.Enqueue(LogLevel.Error, msg);
+            }
+            catch (InvalidOperationException)
+            {
+                UnityEngine.Debug.LogError(msg);
+            }
+        }
 
         private void Flush()
         {
@@ -215,7 +254,6 @@ namespace MLGWorks.Utils.Logging
             {
                 string line = $"[{e.Timestamp:HH:mm:ss.fff}] [{e.Level}] {e.Message}";
 
-                // Use loop-safe Unity logging
                 SafeUnityLog(e.Level, e.Message);
 
                 int mask = e.Level switch
@@ -230,14 +268,23 @@ namespace MLGWorks.Utils.Logging
                 for (int bit = 0; bit < 5; bit++)
                 {
                     if ((mask & (1 << bit)) != 0 && writers.TryGetValue(bit, out var w))
-                        w.WriteLine(line);
+                    {
+                        try
+                        {
+                            w.WriteLine(line);
+                        }
+                        catch { /* Ignore write errors */ }
+                    }
                 }
             }
         }
 
         private void SafeUnityLog(LogLevel level, string message)
         {
-            if (isHandlingUnityLog) return;
+            if (isHandlingUnityLog || isShuttingDown || !logToUnityConsole)
+                return;
+
+            Application.logMessageReceivedThreaded -= UnityLogHook;
 
             try
             {
@@ -262,10 +309,16 @@ namespace MLGWorks.Utils.Logging
                         break;
                 }
             }
+            catch
+            {
+                // Swallow Unity logging errors
+            }
             finally
             {
                 isHandlingUnityLog = false;
             }
+
+            Application.logMessageReceivedThreaded += UnityLogHook;
         }
 
 #if UNITY_EDITOR
@@ -287,13 +340,10 @@ namespace MLGWorks.Utils.Logging
             if (maxLogFileCount < 0) return;
             if (!Directory.Exists(LogDirectory)) return;
 
-            var files = new DirectoryInfo(LogDirectory)
-                .GetFiles($"*{fileExtension}");
-
-            // Extract timestamps from filenames and group files by timestamp string
+            var files = new DirectoryInfo(LogDirectory).GetFiles($"*{fileExtension}");
             var groups = files
                 .GroupBy(f => ExtractTimestampFromFilename(f.Name))
-                .OrderBy(g => g.Key)  // Oldest timestamp first
+                .OrderBy(g => g.Key)
                 .ToList();
 
             int excessGroups = groups.Count - maxLogFileCount;
@@ -315,25 +365,14 @@ namespace MLGWorks.Utils.Logging
             Application.logMessageReceivedThreaded += UnityLogHook;
         }
 
-        // Helper: Extract timestamp substring from filename
         private string ExtractTimestampFromFilename(string filename)
         {
-            // Filename example: "2025-07-20_12-30-00_log_debug.log"
-            // Extract timestamp at the start, until the first underscore after date/time
-
             int firstUnderscore = filename.IndexOf('_');
-            if (firstUnderscore < 0)
-                return "";
-
-            // The timestamp is everything from start up to the second underscore (date + time)
-            // Example: "2025-07-20_12-30-00"
-            // So find second underscore, which separates time and rest of filename
+            if (firstUnderscore < 0) return "";
 
             int secondUnderscore = filename.IndexOf('_', firstUnderscore + 1);
-            if (secondUnderscore < 0)
-                return "";
+            if (secondUnderscore < 0) return "";
 
-            // Extract substring from start to second underscore (inclusive of time part)
             return filename.Substring(0, secondUnderscore);
         }
     }
