@@ -1,3 +1,5 @@
+using MLGWorks.Utils.Patterns.StateMachine;
+using MLGWorks.Utils.Patterns.StateMachine.Interfaces;
 using NUnit.Framework;
 using System;
 
@@ -5,73 +7,218 @@ namespace MLGWorks.Utils.Tests.Patterns
 {
     public class StateMachineTests
     {
-        public class StateMachine<TState>
+        private StateMachine _fsm;
+
+        [SetUp]
+        public void SetUp()
         {
-            public TState CurrentState { get; private set; }
+            _fsm = new StateMachine();
+        }
 
-            public event Action<TState, TState> OnStateChanged;
+        #region Test Helpers
 
-            public StateMachine(TState initialState)
+        private class TestState : IState
+        {
+            public bool Entered { get; private set; }
+            public bool Exited { get; private set; }
+            public int TickCount { get; private set; }
+
+            public void Reset()
             {
-                CurrentState = initialState;
+                Entered = false;
+                Exited = false;
+                TickCount = 0;
             }
 
-            public void SetState(TState newState)
+            public void OnEnter() => Entered = true;
+
+            public void OnExit() => Exited = true;
+
+            public void Tick() => TickCount++;
+        }
+
+        private class ParamState : IStateWithParams<string>
+        {
+            public bool Entered { get; private set; }
+            public bool Exited { get; private set; }
+            public string Received { get; private set; }
+            public int TickCount { get; private set; }
+
+            public void SetParameters(string parameters) => Received = parameters;
+
+            public void OnEnter() => Entered = true;
+
+            public void OnExit() => Exited = true;
+
+            public void Tick() => TickCount++;
+        }
+
+        private class MockCondition : ITransitionCondition
+        {
+            public bool ShouldReturn { get; set; }
+            public int EvaluateCount { get; private set; }
+
+            public bool ShouldTransition()
             {
-                if (!Equals(CurrentState, newState))
-                {
-                    TState oldState = CurrentState;
-                    CurrentState = newState;
-                    OnStateChanged?.Invoke(oldState, newState);
-                }
+                EvaluateCount++;
+                return ShouldReturn;
             }
         }
 
-        private enum GameState
-        { Menu, Playing, Paused }
+        #endregion Test Helpers
 
         [Test]
-        public void StateMachine_Starts_With_Initial_State()
+        public void ManualChangeState_InvokesEnterExitCorrectly()
         {
-            var sm = new StateMachine<GameState>(GameState.Menu);
-            Assert.AreEqual(GameState.Menu, sm.CurrentState);
+            var a = new TestState();
+            var b = new TestState();
+
+            _fsm.ChangeState(a);
+            Assert.AreSame(a, _fsm.Current);
+            Assert.IsTrue(a.Entered);
+            Assert.IsFalse(a.Exited);
+
+            _fsm.ChangeState(b);
+            Assert.AreSame(b, _fsm.Current);
+            Assert.IsTrue(a.Exited);
+            Assert.IsTrue(b.Entered);
         }
 
         [Test]
-        public void StateMachine_Changes_State()
+        public void ChangeState_SameState_DoesNotReenterOrExit()
         {
-            var sm = new StateMachine<GameState>(GameState.Menu);
-            sm.SetState(GameState.Playing);
-            Assert.AreEqual(GameState.Playing, sm.CurrentState);
+            var s = new TestState();
+            _fsm.ChangeState(s);
+
+            s.Reset();
+
+            _fsm.ChangeState(s);
+            Assert.IsFalse(s.Entered);
+            Assert.IsFalse(s.Exited);
         }
 
         [Test]
-        public void StateMachine_Does_Not_Trigger_Change_For_Same_State()
+        public void Tick_WithoutTransition_DelegatesToTick()
         {
-            var sm = new StateMachine<GameState>(GameState.Menu);
-            bool triggered = false;
-            sm.OnStateChanged += (_, _) => triggered = true;
+            var s = new TestState();
+            _fsm.ChangeState(s);
 
-            sm.SetState(GameState.Menu);
-            Assert.IsFalse(triggered);
+            _fsm.Tick();
+            _fsm.Tick();
+
+            Assert.AreEqual(2, s.TickCount);
         }
 
         [Test]
-        public void StateMachine_Triggers_OnStateChanged_Event()
+        public void UnconditionalTransition_ExecutesOnNextTick()
         {
-            var sm = new StateMachine<GameState>(GameState.Menu);
-            GameState from = GameState.Menu, to = GameState.Menu;
+            var from = new TestState();
+            var to = new TestState();
 
-            sm.OnStateChanged += (oldState, newState) =>
-            {
-                from = oldState;
-                to = newState;
-            };
+            _fsm.AddTransition(new UnconditionalTransition(from, to));
+            _fsm.ChangeState(from);
 
-            sm.SetState(GameState.Playing);
+            // After one tick, should transition unconditionally
+            _fsm.Tick();
+            Assert.AreSame(to, _fsm.Current);
+            Assert.IsTrue(from.Exited);
+            Assert.IsTrue(to.Entered);
+        }
 
-            Assert.AreEqual(GameState.Menu, from);
-            Assert.AreEqual(GameState.Playing, to);
+        [Test]
+        public void ConditionalTransition_True_TriggersTransition()
+        {
+            var from = new TestState();
+            var to = new TestState();
+            var cond = new MockCondition { ShouldReturn = true };
+
+            _fsm.AddTransition(new ConditionalTransition(from, to, cond));
+            _fsm.ChangeState(from);
+
+            _fsm.Tick();
+            Assert.AreSame(to, _fsm.Current);
+            Assert.AreEqual(1, cond.EvaluateCount);
+        }
+
+        [Test]
+        public void ConditionalTransition_False_DoesNotTrigger()
+        {
+            var from = new TestState();
+            var to = new TestState();
+            var cond = new MockCondition { ShouldReturn = false };
+
+            _fsm.AddTransition(new ConditionalTransition(from, to, cond));
+            _fsm.ChangeState(from);
+
+            _fsm.Tick();
+            Assert.AreSame(from, _fsm.Current);
+            Assert.AreEqual(1, cond.EvaluateCount);
+        }
+
+        [Test]
+        public void MultipleConditionalTransitions_FirstTrueOnly()
+        {
+            var from = new TestState();
+            var t1 = new TestState();
+            var t2 = new TestState();
+            var cond1 = new MockCondition { ShouldReturn = false };
+            var cond2 = new MockCondition { ShouldReturn = true };
+
+            _fsm.AddTransition(new ConditionalTransition(from, t1, cond1));
+            _fsm.AddTransition(new ConditionalTransition(from, t2, cond2));
+            _fsm.ChangeState(from);
+
+            _fsm.Tick();
+            Assert.AreSame(t2, _fsm.Current);
+            Assert.AreEqual(1, cond1.EvaluateCount);
+            Assert.AreEqual(1, cond2.EvaluateCount);
+        }
+
+        [Test]
+        public void ParameterizedState_ReceivesParametersAndTicks()
+        {
+            var paramState = new ParamState();
+
+            _fsm.ChangeState(paramState, "hello");
+            Assert.IsTrue(paramState.Entered);
+            Assert.AreEqual("hello", paramState.Received);
+
+            _fsm.Tick();
+            Assert.AreEqual(1, paramState.TickCount);
+        }
+
+        [Test]
+        public void ClearTransitions_RemovesAllTransitions()
+        {
+            var from = new TestState();
+            var to = new TestState();
+            var cond = new MockCondition { ShouldReturn = true };
+
+            _fsm.AddTransition(new ConditionalTransition(from, to, cond));
+            _fsm.ClearTransitions();
+
+            _fsm.ChangeState(from);
+            _fsm.Tick();
+            Assert.AreSame(from, _fsm.Current);
+            Assert.AreEqual(0, cond.EvaluateCount);
+        }
+
+        [Test]
+        public void ChangeState_Null_ThrowsException()
+        {
+            Assert.Throws<ArgumentNullException>(() => _fsm.ChangeState((IState)null));
+        }
+
+        [Test]
+        public void ChangeStateWithParams_Null_ThrowsException()
+        {
+            Assert.Throws<ArgumentNullException>(() => _fsm.ChangeState<string>(null, "x"));
+        }
+
+        [Test]
+        public void Tick_WithoutState_DoesNothing()
+        {
+            Assert.DoesNotThrow(() => _fsm.Tick());
         }
     }
 }

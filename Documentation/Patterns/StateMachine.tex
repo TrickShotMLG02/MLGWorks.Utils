@@ -1,71 +1,235 @@
-\section{State Machine}
+\section{State Machine System}
 \label{sec:state-machine}
 
-\subsection{Overview}
-The \texttt{StateMachine} class in \texttt{MLGWorks.Utils.Patterns} provides a lightweight and extensible framework for implementing finite state machines. It allows you to define states via the \texttt{IState} interface and manage transitions and ticking logic.
+The \textbf{State Machine System} in \texttt{MLGWorks.Utils.Patterns} provides a modular, extensible framework for modeling finite state machines with both conditional and unconditional transitions, as well as parameterized states. Each core concept is defined in its own interface or class, enabling easy testing, future visual editor support, and clear separation of concerns.
 
-\subsection{Interfaces}
+\subsection{Core Interfaces}
 
-\begin{verbatim}
+\subsubsection{\texttt{IState}}
+\begin{itemize}
+  \item Defines the basic lifecycle methods of any state.
+  \item Methods:
+    \begin{itemize}
+      \item \verb|void OnEnter()|: called when entering the state.
+      \item \verb|void OnExit()|: called when exiting the state.
+      \item \verb|void Tick()|: called every frame while active.
+    \end{itemize}
+\end{itemize}
+
+\begin{minted}[fontsize=\small,frame=lines,linenos=false]{csharp}
+// IState.cs
 public interface IState
 {
     void OnEnter();
     void OnExit();
     void Tick();
 }
-\end{verbatim}
+\end{minted}
 
-Any class implementing \texttt{IState} can be used as a state in the state machine. The interface defines three methods:
+\subsubsection{\texttt{IStateWithParams<TParams>}}
 \begin{itemize}
-    \item \texttt{OnEnter()}: Called when the state becomes active.
-    \item \texttt{OnExit()}: Called when the state is deactivated.
-    \item \texttt{Tick()}: Called once per frame while the state is active.
+  \item Extends \texttt{IState} to allow passing typed parameters at entry.
+  \item Adds:
+    \begin{itemize}
+      \item \verb|void SetParameters(TParams parameters)|
+    \end{itemize}
 \end{itemize}
 
-\subsection{Usage}
-
-\begin{verbatim}
-public class IdleState : IState
+\begin{minted}[fontsize=\small,frame=lines,linenos=false]{csharp}
+// IStateWithParams.cs
+public interface IStateWithParams<TParams> : IState
 {
-    public void OnEnter() => Debug.Log("Entering Idle");
-    public void OnExit() => Debug.Log("Exiting Idle");
-    public void Tick() => Debug.Log("Idling...");
+    void SetParameters(TParams parameters);
 }
+\end{minted}
 
-public class PatrolState : IState
-{
-    public void OnEnter() => Debug.Log("Start Patrol");
-    public void OnExit() => Debug.Log("Stop Patrol");
-    public void Tick() => Debug.Log("Patrolling...");
-}
-\end{verbatim}
-
-\textbf{Creating and using the state machine:}
-
-\begin{verbatim}
-StateMachine fsm = new StateMachine();
-
-IState idle = new IdleState();
-IState patrol = new PatrolState();
-
-fsm.ChangeState(idle);  // Enters idle
-fsm.Tick();             // Calls idle.Tick()
-
-fsm.ChangeState(patrol); // Exits idle, enters patrol
-fsm.Tick();              // Calls patrol.Tick()
-\end{verbatim}
-
-\subsection{Features}
+\subsubsection{\texttt{ITransition}}
 \begin{itemize}
-    \item Simple and intuitive API for switching states.
-    \item Clean separation of logic per state.
-    \item Ensures proper lifecycle management with \texttt{OnEnter} and \texttt{OnExit}.
-    \item Decouples state logic from the state machine controller.
+  \item Represents a link from one state to another.
+  \item Properties:
+    \begin{itemize}
+      \item \verb|IState From|  
+      \item \verb|IState To|  
+    \end{itemize}
+  \item Method:
+    \begin{itemize}
+      \item \verb|bool ShouldTransition()|
+    \end{itemize}
 \end{itemize}
 
-\subsection{Best Practices}
+\begin{minted}[fontsize=\small,frame=lines,linenos=false]{csharp}
+// ITransition.cs
+public interface ITransition
+{
+    IState From { get; }
+    IState To   { get; }
+    bool ShouldTransition();
+}
+\end{minted}
+
+\subsubsection{\texttt{ITransitionCondition}}
 \begin{itemize}
-    \item Use this system for AI, gameplay logic, input handling, and other behavior switching tasks.
-    \item Consider combining with a visual editor or scriptable objects for more advanced workflows.
-    \item Extend with transition conditions, logging, or debugging utilities as needed.
+  \item Encapsulates a boolean check for use in conditional transitions.
+  \item Method:
+    \begin{itemize}
+      \item \verb|bool ShouldTransition()|
+    \end{itemize}
+\end{itemize}
+
+\begin{minted}[fontsize=\small,frame=lines,linenos=false]{csharp}
+// ITransitionCondition.cs
+public interface ITransitionCondition
+{
+    bool ShouldTransition();
+}
+\end{minted}
+
+\subsection{Classes}
+
+\subsubsection{\texttt{ConditionalTransition}}
+\begin{itemize}
+  \item Implements \texttt{ITransition} using an \texttt{ITransitionCondition}.
+  \item Constructor parameters:
+    \begin{itemize}
+      \item \verb|IState from|  
+      \item \verb|IState to|  
+      \item \verb|ITransitionCondition condition|
+    \end{itemize}
+\end{itemize}
+
+\begin{minted}[fontsize=\small,frame=lines,linenos=false]{csharp}
+// ConditionalTransition.cs
+public class ConditionalTransition : ITransition
+{
+    public IState From { get; }
+    public IState To   { get; }
+
+    private readonly ITransitionCondition _condition;
+
+    public ConditionalTransition(IState from, IState to, ITransitionCondition condition)
+    {
+        From = from;
+        To = to;
+        _condition = condition;
+    }
+
+    public bool ShouldTransition() => _condition.ShouldTransition();
+}
+\end{minted}
+
+\subsubsection{\texttt{UnconditionalTransition}}
+\begin{itemize}
+  \item Implements \texttt{ITransition} with no condition (always true).
+  \item Useful for automatic transitions on next tick.
+\end{itemize}
+
+\begin{minted}[fontsize=\small,frame=lines,linenos=false]{csharp}
+// UnconditionalTransition.cs
+public class UnconditionalTransition : ITransition
+{
+    public IState From { get; }
+    public IState To   { get; }
+
+    public UnconditionalTransition(IState from, IState to)
+    {
+        From = from;
+        To   = to;
+    }
+
+    public bool ShouldTransition() => true;
+}
+\end{minted}
+
+\subsubsection{\texttt{StateMachine}}
+\begin{itemize}
+  \item Manages the current state and evaluates both conditional and unconditional transitions on each tick.
+  \item Methods:
+    \begin{itemize}
+      \item \verb|void AddTransition(ITransition transition)|  
+      \item \verb|void ClearTransitions()|  
+      \item \verb|void ChangeState(IState newState)|  
+      \item \verb|void ChangeState<T>(IStateWithParams<T> newState, T parameters)|  
+      \item \verb|void Tick()|
+    \end{itemize}
+  \item Behavior on \verb|Tick()|:
+    \begin{enumerate}
+      \item Finds the first registered transition where \verb|From| matches \verb|Current| and \verb|ShouldTransition()| returns \texttt{true}.
+      \item If found, calls \verb|ChangeState(transition.To)| and returns.
+      \item Otherwise, calls \verb|Tick()| on the current state.
+    \end{enumerate}
+\end{itemize}
+
+\begin{minted}[fontsize=\small,frame=lines,linenos=false]{csharp}
+// StateMachine.cs
+public class StateMachine
+{
+    private IState _current;
+    private readonly List<ITransition> _transitions = new();
+
+    public IState Current => _current;
+
+    public void AddTransition(ITransition transition) 
+        => _transitions.Add(transition);
+
+    public void ClearTransitions() 
+        => _transitions.Clear();
+
+    public void ChangeState(IState newState)
+    {
+        if (_current == newState) return;
+        _current?.OnExit();
+        _current = newState;
+        _current.OnEnter();
+    }
+
+    public void ChangeState<TParams>(IStateWithParams<TParams> newState, TParams parameters)
+    {
+        _current?.OnExit();
+        newState.SetParameters(parameters);
+        _current = newState;
+        _current.OnEnter();
+    }
+
+    public void Tick()
+    {
+        var transition = _transitions
+            .FirstOrDefault(t => t.From == _current && t.ShouldTransition());
+        if (transition != null)
+        {
+            ChangeState(transition.To);
+            return;
+        }
+        _current?.Tick();
+    }
+}
+\end{minted}
+
+\subsection{Usage Examples}
+
+\paragraph{Manual Transition}
+\begin{minted}[fontsize=\small,frame=lines,linenos=false]{csharp}
+stateMachine.ChangeState(nextState);
+\end{minted}
+
+\paragraph{Unconditional Transition}
+\begin{minted}[fontsize=\small,frame=lines,linenos=false]{csharp}
+fsm.AddTransition(new UnconditionalTransition(idleState, deathState));
+// On next Tick(), if Current==idleState, will switch to deathState
+\end{minted}
+
+\paragraph{Conditional Transition}
+\begin{minted}[fontsize=\small,frame=lines,linenos=false]{csharp}
+fsm.AddTransition(new ConditionalTransition(
+    walkState, runState, 
+    () => Input.GetKey(KeyCode.LeftShift)
+));
+\end{minted}
+
+\subsection{Extensibility \& Future Editor Support}
+
+\begin{itemize}
+  \item \textbf{Visual Editor}: States, transitions, and conditions can be exposed as assets or nodes.
+  \item \textbf{Complex Conditions}: Combine multiple \texttt{ITransitionCondition} instances via AND/OR.
+  \item \textbf{State Parameters}: Leverage \texttt{IStateWithParams<T>} for passing context data.
+  \item \textbf{Hierarchical FSMs}: Allow embedding \texttt{StateMachine} as a state.
 \end{itemize}
