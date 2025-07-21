@@ -1,0 +1,63 @@
+\section{Generic Singleton Base Class}
+\label{sec:singleton}
+
+\subsection{Overview}
+The \texttt{Singleton<T>} class in \texttt{MLGWorks.Utils.Patterns} provides a reusable and type-safe implementation of the Singleton pattern for Unity components. It ensures that only one instance of a given MonoBehaviour-derived type exists in the scene at any time.
+
+\subsection{Purpose}
+The Singleton pattern is useful for manager-style components such as \texttt{GameManager}, \texttt{AudioManager}, or \texttt{UIController} that need to be globally accessible and guaranteed to have exactly one instance.
+
+\subsection{Usage}
+To create a singleton, derive from \texttt{Singleton<T>}:
+
+\begin{verbatim}
+public class GameManager : Singleton<GameManager>
+{
+    protected override void Awake()
+    {
+        base.Awake();
+        // Additional setup here
+    }
+
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
+        // Additional cleanup here
+    }
+
+    public void RestartGame()
+    {
+        // Game logic
+    }
+}
+\end{verbatim}
+
+\textbf{Access the singleton instance:}
+\begin{verbatim}
+GameManager.Instance.RestartGame();
+\end{verbatim}
+
+\subsection{Key Features}
+\begin{itemize}
+    \item Ensures a single instance of \texttt{T} exists.
+    \item Automatically finds the instance using Unity’s \texttt{FindFirstObjectByType<T>()}.
+    \item Destroys any duplicates found in the scene.
+    \item Logs a warning when duplicates are destroyed.
+    \item Offers \texttt{Awake()} and \texttt{OnDestroy()} override hooks for further customization.
+\end{itemize}
+
+\subsection{Thread Safety}
+This implementation is not thread-safe; it relies on Unity’s main thread operations.
+
+\subsection{Error Handling}
+If no instance is found in the scene when accessed via \texttt{Instance}, an \texttt{InvalidOperationException} is thrown:
+\begin{verbatim}
+throw new InvalidOperationException($"No {typeof(T)} found in scene.");
+\end{verbatim}
+
+\subsection{Limitations}
+\begin{itemize}
+    \item Cannot create the instance automatically—must be added to the scene manually.
+    \item Not suitable for non-MonoBehaviour singletons.
+    \item The base class does not enforce persistence across scenes (use \texttt{DontDestroyOnLoad} if needed).
+\end{itemize}

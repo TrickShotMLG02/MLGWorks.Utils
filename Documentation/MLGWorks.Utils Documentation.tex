@@ -1,0 +1,63 @@
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{import}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{tocloft}
+
+% Configure page layout
+\geometry{a4paper, margin=1in}
+\pagestyle{fancy}
+\fancyhead[L]{MLGWorks.Utils Documentation}
+\fancyhead[R]{\today}
+\fancyfoot[C]{\thepage}
+
+% Listings settings
+\definecolor{lightgray}{gray}{0.95}
+\lstset{
+  backgroundcolor=\color{lightgray},
+  basicstyle=\ttfamily\small,
+  frame=single,
+  breaklines=true,
+  captionpos=b
+}
+
+\title{MLGWorks Utility Framework}
+\author{Tim Schlachter}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+% --- Include all sections below ---
+
+% --- Into and Pre-amble ---
+%\subimport{intro/}{intro.tex} \newpage
+
+
+% --- Helpers ---
+\subimport{Helpers/}{Timer.tex} \newpage
+
+
+% --- Patterns ---
+\subimport{Patterns/}{EventBus.tex} \newpage
+\subimport{Patterns/}{Singleton.tex} \newpage
+\subimport{Patterns/}{StateMachine.tex} \newpage
+
+
+% --- Systems ---
+\subimport{Dependency Injection/}{DependencyInjection.tex} \newpage
+\subimport{Logging/}{Logging.tex} \newpage
+
+
+\end{document}

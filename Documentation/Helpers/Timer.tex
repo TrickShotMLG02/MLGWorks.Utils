@@ -1,0 +1,77 @@
+\section{Timer Utility}
+\label{sec:timer_utility}
+
+\subsection{Overview}
+The \texttt{MLGWorks.Utils.Helpers.Timer} class is a lightweight, pure C\# utility for managing countdown timers with support for starting, pausing, resuming, and resetting. This is useful for implementing custom timing logic in non-MonoBehaviour systems.
+
+\subsection{Construction}
+To create a new timer, instantiate it with a duration in seconds:
+
+\begin{verbatim}
+Timer timer = new Timer(5f); // 5 second timer
+\end{verbatim}
+
+\subsection{Core Methods}
+
+\begin{description}
+    \item[\texttt{Start()}] Starts or restarts the timer from zero.
+    \item[\texttt{Reset()}] Stops and resets the timer to zero.
+    \item[\texttt{Pause()}] Temporarily stops the timer’s progress without resetting.
+    \item[\texttt{Resume()}] Continues a paused timer.
+    \item[\texttt{Update(deltaTime)}] Advances the timer’s internal clock by \texttt{deltaTime}. This should be called every frame:
+    \begin{verbatim}
+    timer.Update(Time.deltaTime);
+    \end{verbatim}
+\end{description}
+
+\subsection{Properties}
+
+\begin{itemize}
+    \item \texttt{Duration} – The total time (in seconds) the timer is set for.
+    \item \texttt{Elapsed} – The current elapsed time.
+    \item \texttt{IsRunning} – True if the timer is active and not finished.
+    \item \texttt{IsPaused} – True if the timer is currently paused.
+    \item \texttt{IsFinished} – True if the timer has completed.
+\end{itemize}
+
+\subsection{Events}
+
+\begin{description}
+    \item[\texttt{OnFinished}] Event that is fired exactly once when the timer reaches its duration. Useful for triggering delayed actions:
+    \begin{verbatim}
+    timer.OnFinished += () => Debug.Log("Timer complete!");
+    \end{verbatim}
+\end{description}
+
+\subsection{Typical Usage Example}
+\begin{verbatim}
+public class TimerExample : MonoBehaviour
+{
+    private Timer myTimer;
+
+    void Start()
+    {
+        myTimer = new Timer(3f);
+        myTimer.OnFinished += OnTimerDone;
+        myTimer.Start();
+    }
+
+    void Update()
+    {
+        myTimer.Update(Time.deltaTime);
+    }
+
+    void OnTimerDone()
+    {
+        Debug.Log("Timer finished!");
+    }
+}
+\end{verbatim}
+
+\subsection{Use Cases}
+\begin{itemize}
+    \item Cooldown mechanics
+    \item Timeouts or delays
+    \item Non-MonoBehaviour timing in services or logic layers
+    \item Flexible, testable alternative to \texttt{Coroutine} or \texttt{Invoke}
+\end{itemize}

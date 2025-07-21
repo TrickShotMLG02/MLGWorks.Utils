@@ -1,0 +1,71 @@
+\section{State Machine}
+\label{sec:state-machine}
+
+\subsection{Overview}
+The \texttt{StateMachine} class in \texttt{MLGWorks.Utils.Patterns} provides a lightweight and extensible framework for implementing finite state machines. It allows you to define states via the \texttt{IState} interface and manage transitions and ticking logic.
+
+\subsection{Interfaces}
+
+\begin{verbatim}
+public interface IState
+{
+    void OnEnter();
+    void OnExit();
+    void Tick();
+}
+\end{verbatim}
+
+Any class implementing \texttt{IState} can be used as a state in the state machine. The interface defines three methods:
+\begin{itemize}
+    \item \texttt{OnEnter()}: Called when the state becomes active.
+    \item \texttt{OnExit()}: Called when the state is deactivated.
+    \item \texttt{Tick()}: Called once per frame while the state is active.
+\end{itemize}
+
+\subsection{Usage}
+
+\begin{verbatim}
+public class IdleState : IState
+{
+    public void OnEnter() => Debug.Log("Entering Idle");
+    public void OnExit() => Debug.Log("Exiting Idle");
+    public void Tick() => Debug.Log("Idling...");
+}
+
+public class PatrolState : IState
+{
+    public void OnEnter() => Debug.Log("Start Patrol");
+    public void OnExit() => Debug.Log("Stop Patrol");
+    public void Tick() => Debug.Log("Patrolling...");
+}
+\end{verbatim}
+
+\textbf{Creating and using the state machine:}
+
+\begin{verbatim}
+StateMachine fsm = new StateMachine();
+
+IState idle = new IdleState();
+IState patrol = new PatrolState();
+
+fsm.ChangeState(idle);  // Enters idle
+fsm.Tick();             // Calls idle.Tick()
+
+fsm.ChangeState(patrol); // Exits idle, enters patrol
+fsm.Tick();              // Calls patrol.Tick()
+\end{verbatim}
+
+\subsection{Features}
+\begin{itemize}
+    \item Simple and intuitive API for switching states.
+    \item Clean separation of logic per state.
+    \item Ensures proper lifecycle management with \texttt{OnEnter} and \texttt{OnExit}.
+    \item Decouples state logic from the state machine controller.
+\end{itemize}
+
+\subsection{Best Practices}
+\begin{itemize}
+    \item Use this system for AI, gameplay logic, input handling, and other behavior switching tasks.
+    \item Consider combining with a visual editor or scriptable objects for more advanced workflows.
+    \item Extend with transition conditions, logging, or debugging utilities as needed.
+\end{itemize}
