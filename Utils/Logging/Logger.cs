@@ -59,7 +59,7 @@ namespace MLGWorks.Utils.Logging
             relativePath
         );
 
-        private struct LogEntry
+        public struct LogEntry
         {
             public DateTime Timestamp;
             public LogLevel Level;
@@ -76,7 +76,7 @@ namespace MLGWorks.Utils.Logging
         /// Event triggered when a new batch of logs is ready to be processed.
         /// Useful if one wants to extract the logs and display them in a custom UI or process them differently.
         /// </summary>
-        public event Action<List<string>> OnNewLogBatch;
+        public event Action<List<LogEntry>> OnNewLogBatch;
 
         protected override void Awake()
         {
@@ -256,7 +256,7 @@ namespace MLGWorks.Utils.Logging
 
         private void Flush()
         {
-            var newLogs = new List<string>();
+            var newLogs = new List<LogEntry>();
 
             while (logQueue.TryDequeue(out var e))
             {
@@ -285,7 +285,11 @@ namespace MLGWorks.Utils.Logging
                     }
                 }
 
-                newLogs.Add(line);
+                LogEntry logEntry = new LogEntry();
+                logEntry.Level = e.Level;
+                logEntry.Message = line;
+                logEntry.Timestamp = e.Timestamp;
+                newLogs.Add(logEntry);
             }
 
             if (newLogs.Count > 0)
