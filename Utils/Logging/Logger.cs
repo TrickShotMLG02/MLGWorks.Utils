@@ -20,7 +20,10 @@ namespace MLGWorks.Utils.Logging
         Debug = 0,
         Info = 1,
         Warning = 2,
-        Error = 3
+        Error = 3,
+	Command = 4,
+	Output = 5,
+	Custom = 6
     }
 
     [DefaultExecutionOrder(-1000)]
