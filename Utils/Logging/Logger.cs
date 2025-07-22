@@ -260,7 +260,7 @@ namespace MLGWorks.Utils.Logging
 
             while (logQueue.TryDequeue(out var e))
             {
-                string line = $"[{e.Timestamp:HH:mm:ss.fff}] [{e.Level}] {e.Message}";
+                string line = $"[{e.Timestamp:HH:mm:ss}] [{e.Level}] {e.Message}";
 
                 SafeUnityLog(e.Level, e.Message);
 
