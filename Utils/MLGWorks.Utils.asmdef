@@ -1,6 +1,6 @@
 {
     "name": "MLGWorks.Utils",
-    "rootNamespace": "",
+    "rootNamespace": "MLGWorks.Utils",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
