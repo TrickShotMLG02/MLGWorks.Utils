@@ -32,10 +32,14 @@ namespace MLGWorks.Utils.Patterns
             get
             {
                 if (_instance == null)
+                {
                     _instance = FindFirstObjectByType<T>();
+                }
 
                 if (_instance == null)
+                {
                     throw new InvalidOperationException($"No {typeof(T)} found in scene.");
+                }
 
                 return _instance;
             }
@@ -69,7 +73,9 @@ namespace MLGWorks.Utils.Patterns
         private void SingletonReset()
         {
             if (_instance == this)
+            {
                 _instance = null;
+            }
         }
 
         /// <summary>

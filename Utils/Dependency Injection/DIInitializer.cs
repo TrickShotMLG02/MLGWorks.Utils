@@ -44,12 +44,16 @@ namespace MLGWorks.Utils.DependencyInjection
 
             // Inject dependencies into all MonoBehaviours by setting [Inject] fields.
             foreach (var mono in monos)
+            {
                 Injector.Inject(mono);
+            }
 
             // Invoke Initialize() on all MonoBehaviours that implement IInitializable,
             // allowing for any additional setup after injection.
             foreach (var init in monos.OfType<IInitializable>())
+            {
                 init.Initialize();
+            }
         }
     }
 }

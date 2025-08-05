@@ -1,6 +1,6 @@
-using System.Collections;
 using MLGWorks.Utils.Patterns;
 using NUnit.Framework;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.TestTools;
 

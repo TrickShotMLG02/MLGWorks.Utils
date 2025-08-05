@@ -47,7 +47,9 @@ namespace MLGWorks.Utils.Patterns
         {
             var type = typeof(T);
             if (!_subscribers.TryGetValue(type, out var list))
+            {
                 _subscribers[type] = list = new List<Action<IEvent>>();
+            }
 
             Action<IEvent> wrapper = e => callback((T)e);
             _delegateMap[callback] = wrapper;
@@ -108,7 +110,9 @@ namespace MLGWorks.Utils.Patterns
             if (_subscribers.TryGetValue(type, out var list))
             {
                 foreach (var action in list)
+                {
                     action.Invoke(evt);
+                }
             }
         }
     }

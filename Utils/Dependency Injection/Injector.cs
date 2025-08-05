@@ -22,7 +22,10 @@ namespace MLGWorks.Utils.DependencyInjection
         /// </param>
         public static void Inject(object target)
         {
-            if (target == null) return;
+            if (target == null)
+            {
+                return;
+            }
 
             Type type = target.GetType();
 

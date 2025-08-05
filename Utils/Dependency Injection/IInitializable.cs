@@ -1,5 +1,3 @@
-using UnityEngine;
-
 namespace MLGWorks.Utils.DependencyInjection
 {
     /// <summary>

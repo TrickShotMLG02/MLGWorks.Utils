@@ -1,10 +1,10 @@
-﻿using System;
+﻿using MLGWorks.Utils.Patterns;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
-using MLGWorks.Utils.Patterns;
 
 namespace MLGWorks.Utils.Logging
 {
@@ -89,12 +89,18 @@ namespace MLGWorks.Utils.Logging
         private void EnsureInitialized()
         {
             if (!initialized)
+            {
                 Initialize();
+            }
         }
 
         private void Initialize()
         {
-            if (initialized) return;
+            if (initialized)
+            {
+                return;
+            }
+
             initialized = true;
 
             Directory.CreateDirectory(LogDirectory);
@@ -104,8 +110,12 @@ namespace MLGWorks.Utils.Logging
             void Mark(int mask)
             {
                 for (int bit = 0; bit < 5; bit++)
+                {
                     if ((mask & (1 << bit)) != 0)
+                    {
                         needed.Add(bit);
+                    }
+                }
             }
 
             Mark(debugTargets);
@@ -150,7 +160,10 @@ namespace MLGWorks.Utils.Logging
 
         private void UnityLogHook(string condition, string stackTrace, LogType type)
         {
-            if (isHandlingUnityLog || isShuttingDown) return;
+            if (isHandlingUnityLog || isShuttingDown)
+            {
+                return;
+            }
 
             try
             {
@@ -199,7 +212,9 @@ namespace MLGWorks.Utils.Logging
         {
             Flush();
             foreach (var w in writers.Values)
+            {
                 w.Close();
+            }
         }
 
         private void Enqueue(LogLevel level, string message)
@@ -213,7 +228,9 @@ namespace MLGWorks.Utils.Logging
             try
             {
                 if (Instance.enableDebugLogging)
+                {
                     Instance.Enqueue(LogLevel.Debug, msg);
+                }
             }
             catch (InvalidOperationException)
             {
@@ -304,7 +321,9 @@ namespace MLGWorks.Utils.Logging
         private void SafeUnityLog(LogLevel level, string message)
         {
             if (isHandlingUnityLog || isShuttingDown || !logToUnityConsole)
+            {
                 return;
+            }
 
             Application.logMessageReceivedThreaded -= UnityLogHook;
 
@@ -349,7 +368,10 @@ namespace MLGWorks.Utils.Logging
         {
             Flush();
             foreach (var writer in writers.Values)
+            {
                 writer.Close();
+            }
+
             writers.Clear();
         }
 
@@ -359,8 +381,15 @@ namespace MLGWorks.Utils.Logging
         {
             Application.logMessageReceivedThreaded -= UnityLogHook;
 
-            if (maxLogFileCount < 0) return;
-            if (!Directory.Exists(LogDirectory)) return;
+            if (maxLogFileCount < 0)
+            {
+                return;
+            }
+
+            if (!Directory.Exists(LogDirectory))
+            {
+                return;
+            }
 
             var files = new DirectoryInfo(LogDirectory).GetFiles($"*{fileExtension}");
             var groups = files
@@ -390,10 +419,16 @@ namespace MLGWorks.Utils.Logging
         private string ExtractTimestampFromFilename(string filename)
         {
             int firstUnderscore = filename.IndexOf('_');
-            if (firstUnderscore < 0) return "";
+            if (firstUnderscore < 0)
+            {
+                return "";
+            }
 
             int secondUnderscore = filename.IndexOf('_', firstUnderscore + 1);
-            if (secondUnderscore < 0) return "";
+            if (secondUnderscore < 0)
+            {
+                return "";
+            }
 
             return filename.Substring(0, secondUnderscore);
         }

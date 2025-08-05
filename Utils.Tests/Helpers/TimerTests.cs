@@ -1,5 +1,5 @@
-using NUnit.Framework;
 using MLGWorks.Utils.Helpers;
+using NUnit.Framework;
 
 namespace MLGWorks.Utils.Tests.Helpers
 {

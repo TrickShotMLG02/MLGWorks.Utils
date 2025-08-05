@@ -77,7 +77,9 @@ namespace MLGWorks.Utils.Helpers
         public void Pause()
         {
             if (IsRunning)
+            {
                 IsPaused = true;
+            }
         }
 
         /// <summary>
@@ -86,7 +88,9 @@ namespace MLGWorks.Utils.Helpers
         public void Resume()
         {
             if (IsRunning && IsPaused)
+            {
                 IsPaused = false;
+            }
         }
 
         /// <summary>
@@ -96,7 +100,9 @@ namespace MLGWorks.Utils.Helpers
         public void Update(float deltaTime)
         {
             if (!IsRunning || IsPaused)
+            {
                 return;
+            }
 
             _elapsed += deltaTime;
 

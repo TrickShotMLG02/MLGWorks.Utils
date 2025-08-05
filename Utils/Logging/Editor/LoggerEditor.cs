@@ -1,7 +1,9 @@
-﻿using UnityEditor;
-using UnityEngine;
-using System.IO;
+﻿#if UNITY_EDITOR
+
 using MLGWorks.Utils.Logging;
+using System.IO;
+using UnityEditor;
+using UnityEngine;
 using Logger = MLGWorks.Utils.Logging.Logger;
 
 [CustomEditor(typeof(Logger))]
@@ -83,7 +85,10 @@ public class LoggerEditor : Editor
             var logger = (Logger)target;
             string path = logger.LogDirectory;
             if (!Directory.Exists(path))
+            {
                 Directory.CreateDirectory(path);
+            }
+
             EditorUtility.RevealInFinder(path);
         }
 
@@ -95,3 +100,5 @@ public class LoggerEditor : Editor
         maskProp.intValue = EditorGUILayout.MaskField(label, maskProp.intValue, fileOptions);
     }
 }
+
+#endif

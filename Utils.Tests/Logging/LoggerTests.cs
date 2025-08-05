@@ -44,7 +44,10 @@ namespace MLGWorks.Utils.Tests.Logging
 
             // Clean up any leftover logs before tests
             if (Directory.Exists(logDir))
+            {
                 Directory.Delete(logDir, true);
+            }
+
             Directory.CreateDirectory(logDir);
         }
 
@@ -52,7 +55,10 @@ namespace MLGWorks.Utils.Tests.Logging
         public IEnumerator CleanupLogs()
         {
             var logger = UnityEngine.Object.FindObjectOfType<Logger>();
-            if (logger == null) yield break;
+            if (logger == null)
+            {
+                yield break;
+            }
 
             string logDir = logger.LogDirectory;
             string ext = logger.fileExtension;
@@ -197,7 +203,9 @@ namespace MLGWorks.Utils.Tests.Logging
 
             // Wait a few frames to allow logging and flushing
             for (int i = 0; i < 5; i++)
+            {
                 yield return null;
+            }
 
             Assert.LessOrEqual(logCount, maxLogs * 2, "Possible infinite log recursion detected");
         }
@@ -208,7 +216,9 @@ namespace MLGWorks.Utils.Tests.Logging
             // Ensure no Logger exists in the scene
             var existingLogger = UnityEngine.Object.FindObjectOfType<Logger>();
             if (existingLogger != null)
+            {
                 UnityEngine.Object.DestroyImmediate(existingLogger.gameObject);
+            }
 
             // Expect Unity fallback log output
             LogAssert.Expect(LogType.Log, "[DEBUG] Static debug message");
@@ -230,11 +240,15 @@ namespace MLGWorks.Utils.Tests.Logging
         {
             int firstUnderscore = filename.IndexOf('_');
             if (firstUnderscore < 0)
+            {
                 return "";
+            }
 
             int secondUnderscore = filename.IndexOf('_', firstUnderscore + 1);
             if (secondUnderscore < 0)
+            {
                 return "";
+            }
 
             return filename.Substring(0, secondUnderscore);
         }

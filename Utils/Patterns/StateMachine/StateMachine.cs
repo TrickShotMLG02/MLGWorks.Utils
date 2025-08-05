@@ -53,10 +53,14 @@ namespace MLGWorks.Utils.Patterns.StateMachine
         public void ChangeState(IState newState)
         {
             if (newState == null)
+            {
                 throw new ArgumentNullException(nameof(newState));
+            }
 
             if (_current == newState)
+            {
                 return;
+            }
 
             _current?.OnExit();
             _current = newState;
@@ -76,7 +80,9 @@ namespace MLGWorks.Utils.Patterns.StateMachine
         public void ChangeState<TParams>(IStateWithParams<TParams> newState, TParams parameters)
         {
             if (newState == null)
+            {
                 throw new ArgumentNullException(nameof(newState));
+            }
 
             _current?.OnExit();
             newState.SetParameters(parameters);
