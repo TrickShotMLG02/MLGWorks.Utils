@@ -45,6 +45,7 @@ namespace MLGWorks.Utils.Tests.Patterns
             public int TickCount { get; private set; }
 
             public void SetParameters(string parameters) => Received = parameters;
+            public string GetParameters() => Received;
 
             public void OnEnter() => Entered = true;
 
@@ -181,7 +182,7 @@ namespace MLGWorks.Utils.Tests.Patterns
 
             _fsm.ChangeState(paramState, "hello");
             Assert.IsTrue(paramState.Entered);
-            Assert.AreEqual("hello", paramState.Received);
+            Assert.AreEqual("hello", paramState.GetParameters());
 
             _fsm.Tick();
             Assert.AreEqual(1, paramState.TickCount);
