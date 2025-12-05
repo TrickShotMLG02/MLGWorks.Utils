@@ -11,5 +11,7 @@ namespace MLGWorks.Utils.Patterns.StateMachine.Interfaces
         /// </summary>
         /// <param name="parameters">The parameters to initialize the state.</param>
         void SetParameters(TParams parameters);
+
+        TParams GetParameters();
     }
 }
