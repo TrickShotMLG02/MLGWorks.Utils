@@ -34,6 +34,7 @@ namespace MLGWorks.Utils.Patterns.StateMachine.Interfaces
         public void SetFSM(StateMachine fsm)
         {
             this.fsm = fsm;
+            _condition.SetFSM(fsm);
         }
     }
 }
