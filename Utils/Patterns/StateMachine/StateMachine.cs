@@ -8,6 +8,7 @@ namespace MLGWorks.Utils.Patterns.StateMachine
     /// <summary>
     /// A modular state machine that supports conditional transitions.
     /// </summary>
+    [Serializable]
     public class StateMachine
     {
         private IState _current;
@@ -24,6 +25,9 @@ namespace MLGWorks.Utils.Patterns.StateMachine
         /// <param name="transition">The transition to register.</param>
         public void AddTransition(ITransition transition)
         {
+            transition.SetFSM(this);
+            transition.From.SetFSM(this);
+            transition.To.SetFSM(this);
             _transitions.Add(transition);
         }
 
@@ -33,7 +37,13 @@ namespace MLGWorks.Utils.Patterns.StateMachine
         /// </summary>
         public void AddTransition(IState from, IState to)
         {
-            AddTransition(new UnconditionalTransition(from, to));
+            from.SetFSM(this);
+            to.SetFSM(this);
+
+            UnconditionalTransition trans = new UnconditionalTransition(from, to);
+            trans.SetFSM(this);
+
+            AddTransition(trans);
         }
 
         /// <summary>
@@ -68,26 +78,12 @@ namespace MLGWorks.Utils.Patterns.StateMachine
         }
 
         /// <summary>
-        /// Changes the state to a new parameterized state.
-        /// Calls <see cref="IState.OnExit"/> on the old state, sets parameters on the new state,
-        /// then calls <see cref="IState.OnEnter"/> on the new state.
+        /// Sets the current state to the specified starting state.
         /// </summary>
-        /// <typeparam name="TParams">The type of parameters the new state accepts.</typeparam>
-        /// <param name="newState">The new parameterized state to switch to.</param>
-        /// <param name="parameters">The parameters to pass to the new state.</param>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="newState"/> is <c>null</c>.</exception>
-        public void ChangeState<TParams>(IStateWithParams<TParams> newState, TParams parameters)
+        /// <param name="startingState">The state to start from</param>
+        public void SetStartingState(IState startingState)
         {
-            if (newState == null)
-            {
-                throw new ArgumentNullException(nameof(newState));
-            }
-
-            _current?.OnExit();
-            newState.SetParameters(parameters);
-            _current = newState;
-            _current.OnEnter();
+            _current = startingState;
         }
 
         /// <summary>

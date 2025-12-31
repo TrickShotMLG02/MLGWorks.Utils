@@ -5,6 +5,8 @@ namespace MLGWorks.Utils.Patterns.StateMachine.Interfaces
     /// </summary>
     public class ConditionalTransition : ITransition
     {
+        private StateMachine fsm = null;
+
         /// <inheritdoc/>
         public IState From { get; }
 
@@ -28,5 +30,10 @@ namespace MLGWorks.Utils.Patterns.StateMachine.Interfaces
 
         /// <inheritdoc/>
         public bool ShouldTransition() => _condition.ShouldTransition();
+
+        public void SetFSM(StateMachine fsm)
+        {
+            this.fsm = fsm;
+        }
     }
 }

@@ -6,6 +6,12 @@ namespace MLGWorks.Utils.Patterns.StateMachine.Interfaces
     public interface ITransitionCondition
     {
         /// <summary>
+        /// Sets the fsm that is associated with this transition.
+        /// </summary>
+        /// <param name="fsm"></param>
+        public void SetFSM(StateMachine fsm);
+
+        /// <summary>
         /// Evaluates whether the condition is met.
         /// </summary>
         /// <returns>True if the transition should occur, false otherwise.</returns>

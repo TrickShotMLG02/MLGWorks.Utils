@@ -4,6 +4,8 @@ namespace MLGWorks.Utils.Patterns.StateMachine.Interfaces
 {
     public class UnconditionalTransition : ITransition
     {
+        private StateMachine fsm = null;
+
         public IState From { get; }
         public IState To { get; }
 
@@ -15,5 +17,10 @@ namespace MLGWorks.Utils.Patterns.StateMachine.Interfaces
 
         // Always ready to transition
         public bool ShouldTransition() => true;
+
+        public void SetFSM(StateMachine fsm)
+        {
+            this.fsm = fsm;
+        }
     }
 }

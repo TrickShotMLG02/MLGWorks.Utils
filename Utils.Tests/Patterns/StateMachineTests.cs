@@ -7,18 +7,37 @@ namespace MLGWorks.Utils.Tests.Patterns
 {
     public class StateMachineTests
     {
-        private StateMachine _fsm;
+        private FSMMock _fsm;
+
+        private class FSMMockContext
+        {
+            public String sample;
+        }
+
+        private class FSMMock : StateMachine
+        {
+            public FSMMockContext ctx;
+            public FSMMockContext Context => ctx;
+
+            public FSMMock(FSMMockContext ctx)
+            { 
+                this.ctx = ctx;
+            }
+        }
 
         [SetUp]
         public void SetUp()
         {
-            _fsm = new StateMachine();
+            FSMMockContext ctx = new FSMMockContext();
+            _fsm = new FSMMock(ctx);
         }
 
         #region Test Helpers
 
         private class TestState : IState
         {
+            public StateMachine fsm;
+
             public bool Entered { get; private set; }
             public bool Exited { get; private set; }
             public int TickCount { get; private set; }
@@ -35,29 +54,43 @@ namespace MLGWorks.Utils.Tests.Patterns
             public void OnExit() => Exited = true;
 
             public void Tick() => TickCount++;
+
+            public void SetFSM(StateMachine fsm)
+            {
+                this.fsm = fsm;
+            }
         }
 
-        private class ParamState : IStateWithParams<string>
+        private class ParamState : IState
         {
+            public StateMachine fsm;
+
             public bool Entered { get; private set; }
             public bool Exited { get; private set; }
-            public string Received { get; private set; }
             public int TickCount { get; private set; }
-
-            public void SetParameters(string parameters) => Received = parameters;
-            public string GetParameters() => Received;
 
             public void OnEnter() => Entered = true;
 
             public void OnExit() => Exited = true;
 
             public void Tick() => TickCount++;
+            public void SetFSM(StateMachine fsm)
+            {
+                this.fsm = fsm;
+            }
         }
 
         private class MockCondition : ITransitionCondition
         {
             public bool ShouldReturn { get; set; }
             public int EvaluateCount { get; private set; }
+
+            public StateMachine fsm;
+
+            public void SetFSM(StateMachine fsm)
+            {
+                this.fsm = fsm;
+            }
 
             public bool ShouldTransition()
             {
@@ -179,10 +212,12 @@ namespace MLGWorks.Utils.Tests.Patterns
         public void ParameterizedState_ReceivesParametersAndTicks()
         {
             var paramState = new ParamState();
+            paramState.SetFSM(_fsm);
+            _fsm.Context.sample = "hello";
 
-            _fsm.ChangeState(paramState, "hello");
+            _fsm.ChangeState(paramState);
             Assert.IsTrue(paramState.Entered);
-            Assert.AreEqual("hello", paramState.GetParameters());
+            Assert.AreEqual("hello", ((FSMMock)paramState.fsm).Context);
 
             _fsm.Tick();
             Assert.AreEqual(1, paramState.TickCount);
@@ -208,12 +243,6 @@ namespace MLGWorks.Utils.Tests.Patterns
         public void ChangeState_Null_ThrowsException()
         {
             Assert.Throws<ArgumentNullException>(() => _fsm.ChangeState((IState)null));
-        }
-
-        [Test]
-        public void ChangeStateWithParams_Null_ThrowsException()
-        {
-            Assert.Throws<ArgumentNullException>(() => _fsm.ChangeState<string>(null, "x"));
         }
 
         [Test]

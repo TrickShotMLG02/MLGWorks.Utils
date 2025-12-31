@@ -16,6 +16,12 @@ namespace MLGWorks.Utils.Patterns.StateMachine.Interfaces
         IState To { get; }
 
         /// <summary>
+        /// Sets the fsm that is associated with this transition.
+        /// </summary>
+        /// <param name="fsm"></param>
+        public void SetFSM(StateMachine fsm);
+
+        /// <summary>
         /// Determines whether the transition should occur.
         /// </summary>
         /// <returns>True if the transition should be triggered; otherwise, false.</returns>
