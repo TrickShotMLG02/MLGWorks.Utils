@@ -217,7 +217,7 @@ namespace MLGWorks.Utils.Tests.Patterns
 
             _fsm.ChangeState(paramState);
             Assert.IsTrue(paramState.Entered);
-            Assert.AreEqual("hello", ((FSMMock)paramState.fsm).Context);
+            Assert.AreEqual("hello", ((FSMMock)paramState.fsm).Context.sample);
 
             _fsm.Tick();
             Assert.AreEqual(1, paramState.TickCount);
