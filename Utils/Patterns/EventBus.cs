@@ -43,7 +43,7 @@ namespace MLGWorks.Utils.Patterns
         /// EventBus.Subscribe&lt;PlayerDiedEvent&gt;(OnPlayerDied);
         /// </code>
         /// </example>
-        public static void Subscribe<T>(Action<T> callback) where T : IEvent
+        public static IDisposable Subscribe<T>(Action<T> callback) where T : IEvent
         {
             if (callback == null) throw new ArgumentNullException(nameof(callback));
 
@@ -61,6 +61,7 @@ namespace MLGWorks.Utils.Patterns
 
             wrappers.Add(wrapper);
             list.Add(wrapper);
+            return new EventSubscription(() => RemoveSubscription(type, callback, wrapper));
         }
 
         /// <summary>
@@ -96,10 +97,25 @@ namespace MLGWorks.Utils.Patterns
                 _delegateMap.TryGetValue(callback, out var wrappers) &&
                 wrappers.Count > 0)
             {
-                Action<IEvent> wrapper = wrappers[0];
-                list.Remove(wrapper);
-                wrappers.RemoveAt(0);
+                RemoveSubscription(type, callback, wrappers[0]);
+            }
+        }
 
+        private static void RemoveSubscription<T>(Type type, Action<T> callback, Action<IEvent> wrapper)
+            where T : IEvent
+        {
+            if (_subscribers.TryGetValue(type, out var list))
+            {
+                list.Remove(wrapper);
+                if (list.Count == 0)
+                {
+                    _subscribers.Remove(type);
+                }
+            }
+
+            if (_delegateMap.TryGetValue(callback, out var wrappers))
+            {
+                wrappers.Remove(wrapper);
                 if (wrappers.Count == 0)
                 {
                     _delegateMap.Remove(callback);
@@ -125,7 +141,9 @@ namespace MLGWorks.Utils.Patterns
             Type type = typeof(T);
             if (_subscribers.TryGetValue(type, out var list))
             {
-                foreach (var action in list)
+                // Use a snapshot so a subscriber can safely dispose its subscription
+                // or subscribe another callback while the event is being delivered.
+                foreach (var action in list.ToArray())
                 {
                     action.Invoke(evt);
                 }

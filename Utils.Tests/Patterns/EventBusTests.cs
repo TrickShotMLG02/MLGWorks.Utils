@@ -1,5 +1,6 @@
 using MLGWorks.Utils.Patterns;
 using NUnit.Framework;
+using System;
 
 namespace MLGWorks.Utils.Tests.Patterns
 {
@@ -96,6 +97,55 @@ namespace MLGWorks.Utils.Tests.Patterns
         {
             Assert.Throws<System.ArgumentNullException>(() =>
                 EventBus.Subscribe<TestEvent>(null));
+        }
+
+        [Test]
+        public void Subscription_Dispose_RemovesOnlyItsSubscription()
+        {
+            IDisposable first = EventBus.Subscribe<TestEvent>(OnTestEvent);
+            IDisposable second = EventBus.Subscribe<TestEvent>(OnTestEvent);
+
+            first.Dispose();
+            EventBus.Publish(new TestEvent { Value = 10 });
+
+            Assert.AreEqual(1, _callCount);
+            second.Dispose();
+            second.Dispose();
+            EventBus.Publish(new TestEvent { Value = 20 });
+            Assert.AreEqual(1, _callCount);
+        }
+
+        [Test]
+        public void CompositeDisposable_DisposesAllSubscriptions()
+        {
+            using var subscriptions = new CompositeDisposable();
+            subscriptions.Add(EventBus.Subscribe<TestEvent>(OnTestEvent));
+            subscriptions.Add(EventBus.Subscribe<TestEvent>(OnTestEvent));
+
+            Assert.AreEqual(2, subscriptions.Count);
+            subscriptions.Dispose();
+            subscriptions.Dispose();
+
+            EventBus.Publish(new TestEvent { Value = 10 });
+            Assert.AreEqual(0, _callCount);
+            Assert.AreEqual(0, subscriptions.Count);
+        }
+
+        [Test]
+        public void Publishing_AllowsSubscriptionDisposalDuringCallback()
+        {
+            int callbackCount = 0;
+            IDisposable subscription = null;
+            subscription = EventBus.Subscribe<TestEvent>(_ =>
+            {
+                callbackCount++;
+                subscription.Dispose();
+            });
+
+            EventBus.Publish(new TestEvent());
+            EventBus.Publish(new TestEvent());
+
+            Assert.AreEqual(1, callbackCount);
         }
 
         private void OnTestEvent(TestEvent e)
