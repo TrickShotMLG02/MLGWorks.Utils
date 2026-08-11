@@ -55,12 +55,31 @@ namespace MLGWorks.Utils.Patterns
         {
             if (_instance == null)
             {
+                // The static field can be unset when objects are created dynamically,
+                // especially in Edit Mode tests. Discover an already existing instance
+                // before accepting the current component as the singleton.
+                var instances = FindObjectsByType<T>(
+                    FindObjectsInactive.Include,
+                    FindObjectsSortMode.InstanceID);
+                _instance = instances.Length > 0 ? instances[0] : null;
+            }
+
+            if (_instance == null)
+            {
                 _instance = this as T;
             }
-            else if (_instance != this)
+            else if (!ReferenceEquals(_instance, this))
             {
                 Debug.LogWarning($"Duplicate instance of {typeof(T)} destroyed.");
-                Destroy(gameObject);
+
+                if (Application.isPlaying)
+                {
+                    Destroy(gameObject);
+                }
+                else
+                {
+                    DestroyImmediate(gameObject);
+                }
             }
         }
 
@@ -72,7 +91,7 @@ namespace MLGWorks.Utils.Patterns
         /// instance when it is no longer needed.</remarks>
         private void SingletonReset()
         {
-            if (_instance == this)
+            if (ReferenceEquals(_instance, this))
             {
                 _instance = null;
             }

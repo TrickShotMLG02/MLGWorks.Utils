@@ -14,6 +14,7 @@ namespace MLGWorks.Utils.Tests.Patterns
 
     public class SingletonTests
     {
+        [ExecuteAlways]
         private class TestSingleton : Singleton<TestSingleton>
         { }
 
@@ -49,6 +50,11 @@ namespace MLGWorks.Utils.Tests.Patterns
 
             yield return null; // Wait for Awake
 
+            // Edit Mode tests do not always invoke dynamically added MonoBehaviour
+            // Awake callbacks before the next object is created. Resolve the first
+            // instance explicitly so the duplicate check is deterministic.
+            Assert.AreSame(s1, TestSingleton.Instance);
+
             var go2 = new GameObject("TestSingleton2");
             var s2 = go2.AddComponent<TestSingleton>();
 
@@ -82,14 +88,23 @@ namespace MLGWorks.Utils.Tests.Patterns
 
             Assert.AreEqual(s, TestSingleton.Instance);
 
-            Object.Destroy(go);
-            yield return null; // Wait for OnDestroy
+            if (Application.isPlaying)
+            {
+                Object.Destroy(go);
+                yield return null; // Wait for OnDestroy
+            }
+            else
+            {
+                Object.DestroyImmediate(go);
+            }
 
-            // _instance should now be null
-            var field = typeof(Singleton<TestSingleton>).GetField("_instance", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
-            var value = field.GetValue(null);
-
-            Assert.IsNull(value);
+            // The singleton should no longer resolve to a live object. Do not inspect
+            // the private backing field directly: destroyed UnityEngine.Object instances
+            // can remain as fake-null wrappers even after the singleton has been reset.
+            Assert.Throws<System.InvalidOperationException>(() =>
+            {
+                var unused = TestSingleton.Instance;
+            });
         }
     }
 }
