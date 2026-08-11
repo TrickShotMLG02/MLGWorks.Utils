@@ -29,25 +29,33 @@ namespace MLGWorks.Utils.DependencyInjection
 
             Type type = target.GetType();
 
-            // Get all instance fields, both public and non-public.
-            FieldInfo[] fields = type.GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-
-            foreach (FieldInfo field in fields)
+            // Walk the inheritance chain so private injectable fields declared by a
+            // base class are not skipped when a derived type is injected.
+            for (Type currentType = type; currentType != null; currentType = currentType.BaseType)
             {
-                // Check if the field is decorated with [Inject]
-                if (Attribute.IsDefined(field, typeof(InjectAttribute)))
+                FieldInfo[] fields = currentType.GetFields(
+                    BindingFlags.Instance |
+                    BindingFlags.NonPublic |
+                    BindingFlags.Public |
+                    BindingFlags.DeclaredOnly);
+
+                foreach (FieldInfo field in fields)
                 {
-                    // Try to get a registered service matching the field's type
-                    if (ServiceLocator.TryGet(field.FieldType, out var service))
+                    // Check if the field is decorated with [Inject]
+                    if (Attribute.IsDefined(field, typeof(InjectAttribute)))
                     {
-                        // Inject the service instance into the field
-                        field.SetValue(target, service);
-                    }
-                    else
-                    {
-                        // Log a warning if no service is registered for the field's type
-                        Debug.LogWarning(
-                            $"[Injector] No service registered for type {field.FieldType.Name} on {type.Name}");
+                        // Try to get a registered service matching the field's type
+                        if (ServiceLocator.TryGet(field.FieldType, out var service))
+                        {
+                            // Inject the service instance into the field
+                            field.SetValue(target, service);
+                        }
+                        else
+                        {
+                            // Log a warning if no service is registered for the field's type
+                            Debug.LogWarning(
+                                $"[Injector] No service registered for type {field.FieldType.Name} on {type.Name}");
+                        }
                     }
                 }
             }

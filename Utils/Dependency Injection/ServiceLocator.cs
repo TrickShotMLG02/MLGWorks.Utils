@@ -22,6 +22,8 @@ namespace MLGWorks.Utils.DependencyInjection
         /// <param name="service">The service instance to register. Must be a class.</param>
         public static void Register<T>(T service) where T : class
         {
+            if (service == null) throw new ArgumentNullException(nameof(service));
+
             var type = typeof(T);
             if (_services.ContainsKey(type))
             {
@@ -40,6 +42,14 @@ namespace MLGWorks.Utils.DependencyInjection
         /// <param name="instance">The service instance to register.</param>
         public static void Register(Type type, object instance)
         {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (instance == null) throw new ArgumentNullException(nameof(instance));
+            if (!type.IsInstanceOfType(instance))
+            {
+                throw new ArgumentException(
+                    $"The instance must be assignable to service type {type.FullName}.", nameof(instance));
+            }
+
             if (_services.ContainsKey(type))
             {
                 Debug.LogWarning($"[ServiceLocator] Service of type {type.FullName} is already registered and will not be overwritten.");

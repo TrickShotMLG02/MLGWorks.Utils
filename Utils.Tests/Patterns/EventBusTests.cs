@@ -73,6 +73,31 @@ namespace MLGWorks.Utils.Tests.Patterns
             EventBus.Unsubscribe<TestEvent>(SecondSubscriber);
         }
 
+        [Test]
+        public void DuplicateSubscription_CanBeRemovedIndividually()
+        {
+            EventBus.Subscribe<TestEvent>(OnTestEvent);
+            EventBus.Subscribe<TestEvent>(OnTestEvent);
+
+            EventBus.Publish(new TestEvent { Value = 5 });
+            Assert.AreEqual(2, _callCount);
+
+            EventBus.Unsubscribe<TestEvent>(OnTestEvent);
+            EventBus.Publish(new TestEvent { Value = 6 });
+            Assert.AreEqual(3, _callCount);
+
+            EventBus.Unsubscribe<TestEvent>(OnTestEvent);
+            EventBus.Publish(new TestEvent { Value = 7 });
+            Assert.AreEqual(3, _callCount);
+        }
+
+        [Test]
+        public void Subscribe_NullCallback_Throws()
+        {
+            Assert.Throws<System.ArgumentNullException>(() =>
+                EventBus.Subscribe<TestEvent>(null));
+        }
+
         private void OnTestEvent(TestEvent e)
         {
             _receivedValue = e.Value;

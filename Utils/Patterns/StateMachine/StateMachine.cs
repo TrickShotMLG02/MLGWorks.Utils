@@ -25,6 +25,11 @@ namespace MLGWorks.Utils.Patterns.StateMachine
         /// <param name="transition">The transition to register.</param>
         public void AddTransition(ITransition transition)
         {
+            if (transition == null)
+            {
+                throw new ArgumentNullException(nameof(transition));
+            }
+
             transition.SetFSM(this);
             transition.From.SetFSM(this);
             transition.To.SetFSM(this);
@@ -37,6 +42,9 @@ namespace MLGWorks.Utils.Patterns.StateMachine
         /// </summary>
         public void AddTransition(IState from, IState to)
         {
+            if (from == null) throw new ArgumentNullException(nameof(from));
+            if (to == null) throw new ArgumentNullException(nameof(to));
+
             from.SetFSM(this);
             to.SetFSM(this);
 

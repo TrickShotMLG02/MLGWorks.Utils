@@ -250,5 +250,29 @@ namespace MLGWorks.Utils.Tests.Patterns
         {
             Assert.DoesNotThrow(() => _fsm.Tick());
         }
+
+        [Test]
+        public void AddTransition_NullArguments_Throw()
+        {
+            Assert.Throws<ArgumentNullException>(() => _fsm.AddTransition((ITransition)null));
+            Assert.Throws<ArgumentNullException>(() => _fsm.AddTransition((IState)null, new TestState()));
+            Assert.Throws<ArgumentNullException>(() => _fsm.AddTransition(new TestState(), (IState)null));
+            Assert.Throws<ArgumentNullException>(() =>
+                new ConditionalTransition(new TestState(), new TestState(), null));
+        }
+
+        [Test]
+        public void StateMachine_OnlyTicksCurrentState()
+        {
+            var current = new TestState();
+            var other = new TestState();
+            _fsm.ChangeState(current);
+            _fsm.AddTransition(new UnconditionalTransition(other, new TestState()));
+
+            _fsm.Tick();
+
+            Assert.AreEqual(1, current.TickCount);
+            Assert.AreEqual(0, other.TickCount);
+        }
     }
 }

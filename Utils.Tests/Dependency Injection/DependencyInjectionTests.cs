@@ -1,6 +1,7 @@
 using MLGWorks.Utils.DependencyInjection;
 using MLGWorks.Utils.DependencyInjection.Attributes;
 using NUnit.Framework;
+using System;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -39,6 +40,18 @@ namespace MLGWorks.Utils.Tests.DependencyInjection
         private TestService _service;
 
         public TestService Service => _service;
+    }
+
+    public class BaseInjectableMonoBehaviour : MonoBehaviour
+    {
+        [Inject]
+        private TestService _baseService;
+
+        public TestService BaseService => _baseService;
+    }
+
+    public class DerivedInjectableMonoBehaviour : BaseInjectableMonoBehaviour
+    {
     }
 
     // MonoBehaviour with [DIService] attribute (should auto-register)
@@ -94,6 +107,20 @@ namespace MLGWorks.Utils.Tests.DependencyInjection
             Assert.IsNotNull(injectable.Service);
             Assert.AreEqual("Hello from TestService", injectable.Service.GetData());
 
+            GameObject.DestroyImmediate(go);
+        }
+
+        [Test]
+        public void Injector_Injects_PrivateFieldsFromBaseTypes()
+        {
+            var service = new TestService();
+            ServiceLocator.Register(service);
+            var go = new GameObject("DerivedInjectableObject");
+            var injectable = go.AddComponent<DerivedInjectableMonoBehaviour>();
+
+            Injector.Inject(injectable);
+
+            Assert.AreSame(service, injectable.BaseService);
             GameObject.DestroyImmediate(go);
         }
 
@@ -162,6 +189,52 @@ namespace MLGWorks.Utils.Tests.DependencyInjection
 
             Assert.IsNotNull(retrieved);
             Assert.AreEqual(42, retrieved.Value);
+        }
+
+        [Test]
+        public void ServiceLocator_MissingService_ReturnsFalseAndNull()
+        {
+            Assert.IsNull(ServiceLocator.Get<ITestService>());
+            Assert.IsFalse(ServiceLocator.TryGet<ITestService>(out var result));
+            Assert.IsNull(result);
+        }
+
+        [Test]
+        public void ServiceLocator_NullAndIncompatibleRegistrations_Throw()
+        {
+            Assert.Throws<ArgumentNullException>(() => ServiceLocator.Register<ITestService>(null));
+            Assert.Throws<ArgumentNullException>(() => ServiceLocator.Register(null, new TestService()));
+            Assert.Throws<ArgumentNullException>(() => ServiceLocator.Register(typeof(ITestService), null));
+            Assert.Throws<ArgumentException>(() => ServiceLocator.Register(typeof(ITestService), new PureService()));
+        }
+
+        [Test]
+        public void ServiceLocator_Unregister_RemovesOnlyRequestedService()
+        {
+            var service = new TestService();
+            var other = new PureService();
+            ServiceLocator.Register(service);
+            ServiceLocator.Register(other);
+
+            ServiceLocator.Unregister<TestService>();
+
+            Assert.IsNull(ServiceLocator.Get<TestService>());
+            Assert.AreSame(other, ServiceLocator.Get<PureService>());
+        }
+
+        [Test]
+        public void ServiceLocator_DuplicateRegistration_KeepsOriginal()
+        {
+            var original = new TestService();
+            var replacement = new TestService();
+            ServiceLocator.Register<ITestService>(original);
+            LogAssert.Expect(
+                LogType.Warning,
+                $"[ServiceLocator] Service of type {typeof(ITestService).FullName} is already registered and will not be overwritten.");
+
+            ServiceLocator.Register<ITestService>(replacement);
+
+            Assert.AreSame(original, ServiceLocator.Get<ITestService>());
         }
     }
 }

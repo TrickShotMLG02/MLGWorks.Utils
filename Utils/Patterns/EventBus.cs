@@ -25,7 +25,7 @@ namespace MLGWorks.Utils.Patterns
     public static class EventBus
     {
         private static readonly Dictionary<Type, List<Action<IEvent>>> _subscribers = new();
-        private static readonly Dictionary<Delegate, Action<IEvent>> _delegateMap = new();
+        private static readonly Dictionary<Delegate, List<Action<IEvent>>> _delegateMap = new();
 
         /// <summary>
         /// Subscribes to a specific event type.
@@ -45,6 +45,8 @@ namespace MLGWorks.Utils.Patterns
         /// </example>
         public static void Subscribe<T>(Action<T> callback) where T : IEvent
         {
+            if (callback == null) throw new ArgumentNullException(nameof(callback));
+
             var type = typeof(T);
             if (!_subscribers.TryGetValue(type, out var list))
             {
@@ -52,7 +54,12 @@ namespace MLGWorks.Utils.Patterns
             }
 
             Action<IEvent> wrapper = e => callback((T)e);
-            _delegateMap[callback] = wrapper;
+            if (!_delegateMap.TryGetValue(callback, out var wrappers))
+            {
+                _delegateMap[callback] = wrappers = new List<Action<IEvent>>();
+            }
+
+            wrappers.Add(wrapper);
             list.Add(wrapper);
         }
 
@@ -82,12 +89,21 @@ namespace MLGWorks.Utils.Patterns
 
         public static void Unsubscribe<T>(Action<T> callback) where T : IEvent
         {
+            if (callback == null) return;
+
             var type = typeof(T);
             if (_subscribers.TryGetValue(type, out var list) &&
-                _delegateMap.TryGetValue(callback, out var wrapper))
+                _delegateMap.TryGetValue(callback, out var wrappers) &&
+                wrappers.Count > 0)
             {
+                Action<IEvent> wrapper = wrappers[0];
                 list.Remove(wrapper);
-                _delegateMap.Remove(callback);
+                wrappers.RemoveAt(0);
+
+                if (wrappers.Count == 0)
+                {
+                    _delegateMap.Remove(callback);
+                }
             }
         }
 

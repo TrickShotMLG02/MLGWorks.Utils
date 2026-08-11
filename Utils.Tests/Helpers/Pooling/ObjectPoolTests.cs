@@ -213,5 +213,48 @@ namespace MLGWorks.Utils.Tests.Helpers.Pooling
 
             UnityEngine.Object.DestroyImmediate(prefab);
         }
+
+        [Test]
+        public void Constructor_InvalidCapacities_Throw()
+        {
+            Assert.Throws<ArgumentNullException>(() => new ObjectPool<Item>(null));
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new ObjectPool<Item>(() => new Item(), initialCapacity: -1));
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new ObjectPool<Item>(() => new Item(), maxCapacity: 0));
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                new ObjectPool<Item>(() => new Item(), maxCapacity: -2));
+            Assert.Throws<ArgumentException>(() =>
+                new ObjectPool<Item>(() => new Item(), initialCapacity: 2, maxCapacity: 1));
+        }
+
+        [Test]
+        public void Release_FromAnotherPool_ThrowsWithoutChangingOwnership()
+        {
+            using var firstPool = new ObjectPool<Item>(() => new Item());
+            using var secondPool = new ObjectPool<Item>(() => new Item());
+            Item item = firstPool.Get();
+
+            Assert.Throws<InvalidOperationException>(() => secondPool.Release(item));
+            Assert.AreEqual(1, firstPool.CountActive);
+            Assert.AreEqual(0, secondPool.CountActive);
+
+            firstPool.Release(item);
+        }
+
+        [Test]
+        public void Operations_AfterDispose_ThrowAndDisposeIsIdempotent()
+        {
+            int destroyed = 0;
+            var pool = new ObjectPool<Item>(() => new Item(), onDestroy: _ => destroyed++);
+            pool.Dispose();
+            pool.Dispose();
+
+            Assert.AreEqual(0, destroyed);
+            Assert.Throws<ObjectDisposedException>(() => pool.Get());
+            Assert.Throws<ObjectDisposedException>(() => pool.Clear());
+            Assert.Throws<ObjectDisposedException>(() => pool.Prewarm(1));
+            Assert.Throws<ObjectDisposedException>(() => pool.ReleaseMany(new List<Item>()));
+        }
     }
 }

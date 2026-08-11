@@ -52,5 +52,49 @@ namespace MLGWorks.Utils.Tests.Helpers
             Assert.IsFalse(timer.IsRunning);
             Assert.IsFalse(timer.IsPaused);
         }
+
+        [Test]
+        public void Timer_DoesNotAdvanceBeforeStartOrAfterCompletion()
+        {
+            var timer = new Timer(1f);
+
+            timer.Update(1f);
+            Assert.AreEqual(0f, timer.Elapsed);
+
+            timer.Start();
+            timer.Update(1f);
+            timer.Update(1f);
+
+            Assert.AreEqual(1f, timer.Elapsed);
+            Assert.IsTrue(timer.IsFinished);
+        }
+
+        [Test]
+        public void Timer_ZeroDuration_FinishesOnFirstUpdate()
+        {
+            var timer = new Timer(0f);
+            int finishedCount = 0;
+            timer.OnFinished += () => finishedCount++;
+
+            timer.Start();
+            timer.Update(0f);
+            timer.Update(0f);
+
+            Assert.IsTrue(timer.IsFinished);
+            Assert.AreEqual(1, finishedCount);
+        }
+
+        [Test]
+        public void Timer_Start_RestartsFromZero()
+        {
+            var timer = new Timer(2f);
+            timer.Start();
+            timer.Update(1f);
+            timer.Start();
+
+            Assert.AreEqual(0f, timer.Elapsed);
+            Assert.IsTrue(timer.IsRunning);
+            Assert.IsFalse(timer.IsPaused);
+        }
     }
 }

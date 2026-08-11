@@ -1,4 +1,5 @@
 using MLGWorks.Utils.Patterns.StateMachine.Interfaces;
+using System;
 
 namespace MLGWorks.Utils.Patterns.StateMachine
 {
@@ -25,9 +26,9 @@ namespace MLGWorks.Utils.Patterns.StateMachine
         /// <param name="condition">Condition to evaluate.</param>
         public ConditionalTransition(IState from, IState to, ITransitionCondition condition)
         {
-            From = from;
-            To = to;
-            _condition = condition;
+            From = from ?? throw new ArgumentNullException(nameof(from));
+            To = to ?? throw new ArgumentNullException(nameof(to));
+            _condition = condition ?? throw new ArgumentNullException(nameof(condition));
         }
 
         /// <inheritdoc/>
