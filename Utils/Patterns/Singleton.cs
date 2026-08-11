@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using MLGWorks.Utils.Helpers.Unity;
 
 namespace MLGWorks.Utils.Patterns
 {
@@ -71,15 +72,7 @@ namespace MLGWorks.Utils.Patterns
             else if (!ReferenceEquals(_instance, this))
             {
                 Debug.LogWarning($"Duplicate instance of {typeof(T)} destroyed.");
-
-                if (Application.isPlaying)
-                {
-                    Destroy(gameObject);
-                }
-                else
-                {
-                    DestroyImmediate(gameObject);
-                }
+                gameObject.SafeDestroy();
             }
         }
 

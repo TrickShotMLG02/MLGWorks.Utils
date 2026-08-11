@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using MLGWorks.Utils.Helpers.Pooling.Core;
+using MLGWorks.Utils.Helpers.Unity;
 
 namespace MLGWorks.Utils.Helpers.Pooling.Unity
 {
@@ -100,50 +101,32 @@ namespace MLGWorks.Utils.Helpers.Pooling.Unity
         private GameObject CreateInstance()
         {
             GameObject instance = UnityEngine.Object.Instantiate(prefab, parent, false);
-            instance.SetActive(false);
+            instance.SetActiveIfChanged(false);
             return instance;
         }
 
         private void OnGet(GameObject instance)
         {
-            if (parent != null && instance.transform.parent != parent)
+            if (parent != null)
             {
-                instance.transform.SetParent(parent, false);
+                instance.transform.SetParentIfChanged(parent);
             }
 
-            if (!instance.activeSelf)
-            {
-                instance.SetActive(true);
-            }
+            instance.SetActiveIfChanged(true);
         }
 
         private void OnRelease(GameObject instance)
         {
-            if (instance.activeSelf)
+            instance.SetActiveIfChanged(false);
+            if (parent != null)
             {
-                instance.SetActive(false);
-            }
-            if (parent != null && instance.transform.parent != parent)
-            {
-                instance.transform.SetParent(parent, false);
+                instance.transform.SetParentIfChanged(parent);
             }
         }
 
         private static void DestroyInstance(GameObject instance)
         {
-            if (instance == null)
-            {
-                return;
-            }
-
-            if (Application.isPlaying)
-            {
-                UnityEngine.Object.Destroy(instance);
-            }
-            else
-            {
-                UnityEngine.Object.DestroyImmediate(instance);
-            }
+            instance.SafeDestroy();
         }
     }
 }

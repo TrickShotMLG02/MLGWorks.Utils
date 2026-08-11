@@ -115,12 +115,7 @@ namespace MLGWorks.Utils.Helpers.Unity
 
         private static int SetActive(Transform transform, bool active)
         {
-            int changed = 0;
-            if (transform.gameObject.activeSelf != active)
-            {
-                transform.gameObject.SetActive(active);
-                changed++;
-            }
+            int changed = transform.gameObject.SetActiveIfChanged(active) ? 1 : 0;
 
             for (int i = 0; i < transform.childCount; i++)
             {
