@@ -1,4 +1,6 @@
-namespace MLGWorks.Utils.Patterns.StateMachine.Interfaces
+using MLGWorks.Utils.Patterns.StateMachine.Interfaces;
+
+namespace MLGWorks.Utils.Patterns.StateMachine
 {
     /// <summary>
     /// A transition that uses a condition to determine if it should occur.

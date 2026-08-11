@@ -1,6 +1,8 @@
 using System;
 
-namespace MLGWorks.Utils.Patterns.StateMachine.Interfaces
+using MLGWorks.Utils.Patterns.StateMachine.Interfaces;
+
+namespace MLGWorks.Utils.Patterns.StateMachine
 {
     public class UnconditionalTransition : ITransition
     {
