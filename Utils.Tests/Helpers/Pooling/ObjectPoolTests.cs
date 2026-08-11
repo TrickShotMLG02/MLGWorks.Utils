@@ -153,9 +153,10 @@ namespace MLGWorks.Utils.Tests.Helpers.Pooling
         {
             int destroyed = 0;
             var pool = new ObjectPool<Item>(() => new Item(), onDestroy: _ => destroyed++);
+            Item inactive = pool.Get();
+            pool.Release(inactive);
             Item active = pool.Get();
-            pool.Release(active);
-            pool.Get();
+            Item secondActive = pool.Get();
 
             pool.Dispose();
 
