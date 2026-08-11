@@ -21,7 +21,6 @@ namespace MLGWorks.Utils.DependencyInjection
     /// nearly all other Awake methods, allowing all scene objects to be created and ready.
     /// </summary>
     [DefaultExecutionOrder(10000)]  // Run this *after* almost everything else
-    [ExecuteAlways]
     public class DIInitializer : MonoBehaviour
     {
         private readonly HashSet<IInitializable> initializedObjects = new();
@@ -50,6 +49,16 @@ namespace MLGWorks.Utils.DependencyInjection
         /// This supports services and injectable objects that are created during Awake.
         /// </summary>
         private void Start()
+        {
+            ProcessScene();
+        }
+
+        /// <summary>
+        /// Explicitly performs the dependency-injection pass for the current scene.
+        /// This is useful when objects are created dynamically or when a caller controls
+        /// initialization manually. Calling this method repeatedly is safe.
+        /// </summary>
+        public void InitializeNow()
         {
             ProcessScene();
         }

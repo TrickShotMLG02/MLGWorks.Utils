@@ -112,6 +112,10 @@ namespace MLGWorks.Utils.Tests.DependencyInjection
             var initializerGO = new GameObject("DIInitializerGO");
             var diInitializer = initializerGO.AddComponent<DIInitializer>();
 
+            // This assembly runs as an Editor test, where normal MonoBehaviour lifecycle
+            // callbacks are not guaranteed for dynamically created objects.
+            diInitializer.InitializeNow();
+
             // Wait one frame for Awake calls
             yield return null;
 
