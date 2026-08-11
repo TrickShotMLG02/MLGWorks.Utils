@@ -38,14 +38,19 @@ namespace MLGWorks.Utils.Helpers.Collections
             }
         }
 
-        void ISerializationCallbackReceiver.OnAfterDeserialize() => Rebuild();
+        void ISerializationCallbackReceiver.OnAfterDeserialize()
+        {
+            RebuildRuntimeState();
+            runtimeStateInitialized = true;
+        }
 
         /// <summary>Ensures the runtime adapter has been initialized.</summary>
         protected void EnsureRuntimeState()
         {
             if (!runtimeStateInitialized)
             {
-                Rebuild();
+                RebuildRuntimeState();
+                runtimeStateInitialized = true;
             }
         }
 

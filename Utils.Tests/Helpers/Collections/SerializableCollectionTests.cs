@@ -75,7 +75,8 @@ namespace MLGWorks.Utils.Tests.Helpers.Collections
 
             Assert.AreEqual(1, dictionary.Count);
             Assert.AreEqual(1, dictionary["key"]);
-            Assert.IsFalse(dictionary.LastValidation.IsValid);
+            Assert.IsTrue(dictionary.LastValidation.IsValid);
+            Assert.IsTrue(dictionary.LastValidation.HasWarnings);
             Assert.AreEqual(CollectionValidationIssueType.DuplicateKey, dictionary.LastValidation.Issues[0].Type);
         }
 
@@ -311,7 +312,7 @@ namespace MLGWorks.Utils.Tests.Helpers.Collections
             IReadOnlySerializableLookup<string, string> readOnly = lookup;
 
             Assert.IsTrue(readOnly.ContainsKey("item"));
-            Assert.AreEqual(2, lookup.RemoveWhere((_, value) => value == "remove" || value == "other"));
+            Assert.AreEqual(2, lookup.RemoveWhere((key, value) => value == "remove" || key == "other"));
             Assert.IsTrue(lookup.ContainsAll(new[] { "item" }));
             Assert.IsFalse(lookup.ContainsKey("other"));
         }
