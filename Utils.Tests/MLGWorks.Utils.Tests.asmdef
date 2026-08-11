@@ -2,8 +2,10 @@
     "name": "MLGWorks.Utils.Tests",
     "rootNamespace": "MLGWorks.Utils.Tests",
     "references": [
-        "GUID:9440d5481d78b0e4a9bc9fd7ede8c8bc",
-        "GUID:27619889b8ba8c24980f49ee34dbb44a"
+        "GUID:9440d5481d78b0e4a9bc9fd7ede8c8bc"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
     ],
     "includePlatforms": [
         "Editor"
@@ -13,7 +15,9 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [],
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
     "versionDefines": [],
     "noEngineReferences": false
 }
