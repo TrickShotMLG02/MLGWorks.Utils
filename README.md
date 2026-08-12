@@ -106,6 +106,34 @@ These patterns are independent: an event-driven system does not need to adopt th
 
 Both singleton bases live in the [`MLGWorks.Utils.Patterns.Singletons`](Utils/Patterns/Singletons) namespace. The Unity variant keeps scene lookup, duplicate destruction, and `Awake`/`OnDestroy` lifecycle handling; the pure C# variant has no Unity dependency and creates its instance on first access.
 
+Use `Singleton<T>` for a component that already exists in a Unity scene:
+
+```csharp
+using MLGWorks.Utils.Patterns.Singletons;
+
+public sealed class AudioManager : Singleton<AudioManager>
+{
+    // Add this component to one GameObject in the scene.
+}
+
+AudioManager.Instance.PlayMusic();
+```
+
+Use `PureSingleton<T>` for a regular C# service with a public parameterless constructor:
+
+```csharp
+using MLGWorks.Utils.Patterns.Singletons;
+
+public sealed class SaveService : PureSingleton<SaveService>
+{
+    public void Save() { /* ... */ }
+}
+
+SaveService.Instance.Save();
+```
+
+The Unity variant does not create a GameObject, persist itself across scenes, or replace an existing component. For services that need explicit ownership or easy substitution in tests, prefer the dependency-injection utilities instead.
+
 </details>
 
 <details>
