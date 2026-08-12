@@ -1,0 +1,40 @@
+\section{Singletons}
+\label{sec:singletons}
+
+The singleton helpers now live in \texttt{MLGWorks.Utils.Patterns.Singletons}. They share small internal state-management code but intentionally have different creation and lifetime rules.
+
+\subsection{Unity singleton}
+\texttt{Singleton<T>} is a \texttt{MonoBehaviour} base for a component that already exists in a scene. During \texttt{Awake()}, the first instance becomes the owner; duplicate components are destroyed. \texttt{Instance} searches the scene if necessary and throws \texttt{InvalidOperationException} when no component exists. \texttt{OnDestroy()} releases the ownership.
+
+\begin{lstlisting}
+using MLGWorks.Utils.Patterns.Singletons;
+
+public sealed class AudioManager : Singleton<AudioManager>
+{
+    protected override void Awake()
+    {
+        base.Awake();
+        // Additional initialization.
+    }
+}
+
+AudioManager.Instance.PlayMusic();
+\end{lstlisting}
+
+This base does not create a GameObject, call \texttt{DontDestroyOnLoad}, or persist the object across scenes. Derived overrides should call the base \texttt{Awake()} and \texttt{OnDestroy()} methods.
+
+\subsection{Pure C\# singleton}
+\texttt{PureSingleton<T>} is for regular C\# classes. The instance is created lazily on first access and requires a public parameterless constructor.
+
+\begin{lstlisting}
+using MLGWorks.Utils.Patterns.Singletons;
+
+public sealed class SaveService : PureSingleton<SaveService>
+{
+    public void Save() { /* write save data */ }
+}
+
+SaveService.Instance.Save();
+\end{lstlisting}
+
+The pure variant has no Unity lifecycle and shares its instance for the lifetime of the application domain. Prefer dependency injection when explicit ownership or easy replacement in tests matters more than global access.

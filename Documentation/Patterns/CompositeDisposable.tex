@@ -1,0 +1,16 @@
+\section{Composite disposables}
+\label{sec:composite-disposable}
+
+\texttt{CompositeDisposable} owns several \texttt{IDisposable} values and releases them as one scope. It disposes resources in reverse addition order. Adding to an already disposed composite disposes the new resource immediately.
+
+\begin{lstlisting}
+using MLGWorks.Utils.Patterns;
+
+using var lifetime = new CompositeDisposable();
+lifetime.Add(EventBus.Subscribe<PlayerDiedEvent>(OnPlayerDied));
+lifetime.Add(otherResource);
+
+// Both resources are disposed when the scope ends.
+\end{lstlisting}
+
+The type is intentionally small and is not thread-safe. Use one owner and one execution context for its lifetime.

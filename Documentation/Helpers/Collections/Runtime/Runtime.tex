@@ -1,0 +1,34 @@
+\paragraph{SerializableDictionary}
+\texttt{SerializableDictionary<TKey,TValue>} provides dictionary operations such as \texttt{Add}, \texttt{TryAdd}, \texttt{TryGetValue}, \texttt{Remove}, \texttt{AddRange}, and \texttt{RemoveWhere}. Serialized entries retain Inspector order. Duplicate keys are handled through \texttt{DuplicateKeyPolicy}: keep the first value, keep the last value, or report the duplicate without silently choosing one.
+
+\paragraph{SerializableHashSet}
+\texttt{SerializableHashSet<T>} stores unique values and provides \texttt{Contains}, \texttt{Add}, \texttt{Remove}, bulk updates, and predicate-based removal. Serialized order is retained for Inspector display.
+
+\paragraph{SerializableLookup}
+\texttt{SerializableLookup<TKey,TValue>} maps one key to multiple values. Use \texttt{Add}, \texttt{GetValues}, or \texttt{TryGetValues} when a dictionary value would otherwise need to be a manually managed list.
+
+All three types derive from \texttt{SerializableCollectionBase}. They expose validation results, change/rebuild events, read-only interfaces, and explicit \texttt{Rebuild()} behavior. Null entries, malformed entries, and duplicate keys are represented as validation issues with a severity and an explanatory message.
+
+\begin{lstlisting}
+using System;
+using MLGWorks.Utils.Helpers.Collections;
+using UnityEngine;
+
+[Serializable]
+public sealed class ItemTags : SerializableLookup<string, string> { }
+
+public sealed class InventoryData : MonoBehaviour
+{
+    [SerializeField] private ItemTags tags = new ItemTags();
+
+    private void Reset()
+    {
+        tags.Clear();
+        tags.Add("Sword", "Weapon");
+        tags.Add("Sword", "Melee");
+        tags.Add("Potion", "Consumable");
+    }
+}
+\end{lstlisting}
+
+The repository also contains a matching Inspector example. The \texttt{Editor} side adds the default property drawer, extension registration, and editor-only copy, paste, duplicate, and in-memory preset operations.

@@ -1,0 +1,5 @@
+The collection editor code is not part of the runtime API. The default property drawer draws supported collection fields in the Inspector, while the drawer registry discovers and selects custom extensions.
+
+Custom editor drawers implement \texttt{ICollectionDrawerExtension} and are associated with a collection type through an attribute. The editor clipboard provides commands for copying, pasting, duplicating, and saving or loading a current in-memory preset.
+
+These tools affect the Unity Editor only; they do not add editor dependencies to player builds.

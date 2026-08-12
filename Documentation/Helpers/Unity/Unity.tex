@@ -1,0 +1,39 @@
+\section{Unity extensions}
+\label{sec:unity-extensions}
+
+The extension methods in \texttt{Helpers/Unity} focus on small operations that are common in Unity scripts.
+
+\subsection{Random collections}
+\texttt{RandomCollectionExtensions} provides Fisher--Yates shuffling and weighted selection. \texttt{Shuffle()} changes an \texttt{IList<T>} in place; \texttt{Shuffled()} creates a new \texttt{List<T>} without changing its source. Overloads accepting \texttt{System.Random} are useful for deterministic tests or seeded gameplay.
+
+\begin{lstlisting}
+using System;
+using System.Collections.Generic;
+using MLGWorks.Utils.Helpers.Unity;
+
+var cards = new List<string> { "A", "K", "Q", "J" };
+cards.Shuffle(new Random(42));
+List<string> copy = cards.Shuffled();
+
+var loot = new[] { "Potion", "Sword", "Gem" };
+var weights = new[] { 70f, 25f, 5f };
+string drop = loot.SelectWeighted(weights);
+\end{lstlisting}
+
+Weights must be finite and non-negative, and the item and weight lists must have the same length. \texttt{TrySelectWeighted} returns \texttt{false} for an empty list or a zero total weight; \texttt{SelectWeighted} throws in those cases.
+
+\subsection{Components and transforms}
+\texttt{ComponentExtensions} provides component lookup on a GameObject and its children or parents. \texttt{TransformExtensions} includes hierarchy-wide layer and active-state changes, local-transform reset, child destruction, and path lookup.
+
+\begin{lstlisting}
+if (gameObject.TryGetComponentInChildren(out Rigidbody body))
+{
+    body.gameObject.SetActiveHierarchy(false);
+}
+
+transform.ResetLocalTransform();
+transform.DestroyChildren();
+\end{lstlisting}
+
+\subsection{UI and Unity object helpers}
+\texttt{UIExtensions} avoids redundant UI assignments for anchored position, size delta, and CanvasGroup visibility. \texttt{UnityObjectExtensions} provides change-aware GameObject operations, safe parenting, and \texttt{SafeDestroy}, which uses the appropriate destruction method in play mode and edit mode.

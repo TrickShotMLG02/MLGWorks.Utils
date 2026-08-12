@@ -1,0 +1,33 @@
+The Unity wrappers use prefab instances while keeping the same acquire/release model as \texttt{ObjectPool<T>}:
+\begin{itemize}
+  \item \texttt{GameObjectPool} activates acquired prefab instances and deactivates released ones.
+  \item \texttt{ComponentPool<T>} acquires components from pooled GameObjects and supports \texttt{IPoolable} hooks.
+  \item \texttt{AudioSourcePool} resets playback state and can acquire a source with an optional clip and immediate playback.
+  \item \texttt{ParticleSystemPool} stops and resets particle systems between uses.
+\end{itemize}
+
+\begin{lstlisting}
+using MLGWorks.Utils.Helpers.Pooling.Unity;
+using UnityEngine;
+
+public sealed class EffectSpawner : MonoBehaviour
+{
+    [SerializeField] private GameObject effectPrefab;
+    private ParticleSystemPool pool;
+
+    private void Awake() => pool = new ParticleSystemPool(effectPrefab);
+
+    public ParticleSystem Spawn(Vector3 position)
+    {
+        ParticleSystem effect = pool.Get();
+        effect.transform.position = position;
+        effect.Play();
+        return effect;
+    }
+
+    public void Despawn(ParticleSystem effect) => pool.Release(effect);
+    private void OnDestroy() => pool?.Dispose();
+}
+\end{lstlisting}
+
+All Unity pools provide prewarming, stepped prewarming, clearing, and disposal. They own the instances they create, so release instances through the same pool that acquired them.

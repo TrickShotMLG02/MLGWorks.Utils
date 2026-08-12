@@ -1,106 +1,25 @@
-\section{Logger Utility}
-\label{sec:logger_utility}
+\section{Logging}
+\label{sec:logging}
 
-\subsection{Overview}
-The \texttt{Logger} class in \texttt{MLGWorks.Utils.Logging} provides a flexible and centralized logging framework for Unity applications. It captures Unity logs, routes them into categorized log files, and supports features like file cleanup, multiple output targets, and per-level filtering.
+\texttt{MLGWorks.Utils.Logging.Logger} is a Unity singleton that mirrors application messages to the Unity console and writes configured log files. It queues entries, so Unity's threaded log callback can translate messages without performing file work on the callback thread.
 
-\subsection{LogLevel and Targets}
-Each log entry has a severity level:
-\begin{itemize}
-  \item \texttt{Debug}
-  \item \texttt{Info}
-  \item \texttt{Warning}
-  \item \texttt{Error}
-\end{itemize}
+\subsection{Setup}
+Add a GameObject with the \texttt{Logger} component to a scene. Configure \texttt{pathType}, \texttt{relativePath} or \texttt{customPath}, \texttt{fileExtension}, \texttt{maxLogFileCount}, and whether debug messages should be enabled. File writers are initialized lazily on the first application message.
 
-Log levels are directed to specific files using 5-bit masks:
-\begin{itemize}
-  \item Bit 0: Debug file
-  \item Bit 1: Info file
-  \item Bit 2: Warning file
-  \item Bit 3: Error file
-  \item Bit 4: Combined file (receives all)
-\end{itemize}
+\begin{lstlisting}
+using MLGWorks.Utils.Logging;
 
-Example:
-\begin{verbatim}
-public int debugTargets = (1 << 0) | (1 << 4); // debug + combined
-\end{verbatim}
+Logger.Info("Application started.");
+Logger.Warning("A fallback value was used.");
+Logger.Error("The save operation failed.");
+\end{lstlisting}
 
-\subsection{Configuration Options}
+The static methods are \texttt{Debug}, \texttt{Info}, \texttt{Warning}, and \texttt{Error}. \texttt{EmitTestLogs()} emits one message at each standard level, which is useful when checking a project setup.
 
-\begin{description}
-  \item[\texttt{LogLocationType}] Determines the base path used for log storage:
-    \begin{itemize}
-        \item \texttt{PersistentDataPath}
-        \item \texttt{DataPath}
-        \item \texttt{Custom}
-    \end{itemize}
+\subsection{File routing}
+\texttt{LogLevel} values are routed by bit masks. Bit 0 is the debug file, bit 1 the info file, bit 2 the warning file, bit 3 the error file, and bit 4 the combined file. For example, \texttt{(1 << 0) | (1 << 4)} sends debug entries to both debug and combined files.
 
-  \item[\texttt{relativePath}] Folder path relative to base directory.
-  \item[\texttt{customPath}] Absolute path if \texttt{Custom} type is selected.
-  \item[\texttt{fileExtension}] Default: \texttt{.log}.
-  \item[\texttt{maxLogFileCount}] Limits how many timestamped log file sets are retained. Use \texttt{-1} to keep all.
-  \item[\texttt{enableDebugLogging}] Toggles whether \texttt{Debug()} logs are allowed.
-\end{description}
-
-\subsection{Logging API}
-
-The logging methods enqueue messages for writing in a background-safe fashion:
-\begin{itemize}
-  \item \texttt{Logger.Debug(string msg)}
-  \item \texttt{Logger.Info(string msg)}
-  \item \texttt{Logger.Warning(string msg)}
-  \item \texttt{Logger.Error(string msg)}
-\end{itemize}
-
-\begin{verbatim}
-Logger.Info("App started.");
-\end{verbatim}
-
-All logs are timestamped and formatted like:
-\begin{verbatim}
-[14:23:01.123] [Info] App started.
-\end{verbatim}
-
-\subsection{Unity Integration}
-
-Unity messages (e.g., \texttt{Debug.Log}, \texttt{Debug.LogError}) are automatically captured via \texttt{Application.logMessageReceivedThreaded} and redirected to the logger with a \texttt{[UNITY]} prefix.
+\texttt{LogLocationType.PersistentDataPath} is the normal application location; \texttt{DataPath} uses the project data path, and \texttt{Custom} uses \texttt{customPath}. \texttt{CleanupOldLogFiles()} removes the oldest complete timestamped sessions until \texttt{maxLogFileCount} is satisfied. A negative maximum keeps all sessions.
 
 \subsection{Lifecycle}
-
-\begin{itemize}
-  \item Logging begins lazily when the first log is emitted.
-  \item \texttt{Flush()} is called on every frame.
-  \item Log files are closed on \texttt{OnDestroy()} and \texttt{OnApplicationQuit()}.
-\end{itemize}
-
-\subsection{Log Cleanup}
-
-The method \texttt{CleanupOldLogFiles()} deletes old log groups based on timestamps:
-\begin{itemize}
-  \item Files are grouped by prefix timestamp (e.g., \texttt{2025-07-20\_12-30-00}).
-  \item Groups exceeding \texttt{maxLogFileCount} are deleted oldest-first.
-\end{itemize}
-
-\subsection{Example Usage}
-\begin{verbatim}
-Logger.Debug("This is a debug log.");
-Logger.Info("App launched successfully.");
-Logger.Warning("Disk space running low.");
-Logger.Error("Unhandled exception occurred.");
-\end{verbatim}
-
-\subsection{Testing}
-\texttt{EmitTestLogs()} can be called to quickly generate log messages of all levels.
-
-\subsection{Editor Support}
-In the Unity Editor, \texttt{FlushAndShutdown()} can be used to immediately close files and clear writers without waiting for app shutdown.
-
-\subsection{Implementation Notes}
-\begin{itemize}
-  \item Uses a thread-safe \texttt{ConcurrentQueue} to stage logs.
-  \item Writes are flushed in \texttt{Update()}.
-  \item Log file creation uses timestamps to separate sessions.
-  \item Each log level writes to target files based on its configured mask.
-\end{itemize}
+The logger flushes its queue during \texttt{Update()}, unsubscribes from Unity log callbacks, and closes writers during shutdown. In editor tests, \texttt{FlushAndShutdown()} is available to force the same cleanup path immediately. The editor integration is in \texttt{Logging/Editor}.

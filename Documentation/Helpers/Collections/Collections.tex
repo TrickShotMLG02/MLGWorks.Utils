@@ -1,0 +1,10 @@
+\section{Collections}
+\label{sec:collections}
+
+Unity serializes fields, arrays, and lists well, but it does not directly serialize the standard .NET dictionary, hash set, or one-to-many lookup types. The collection helpers under \texttt{Helpers/Collections} keep a serialized representation for the Inspector and rebuild a runtime representation for fast access.
+
+\subsection{Runtime collections}
+\input{Helpers/Collections/Runtime/Runtime.tex}
+
+\subsection{Editor support}
+\input{Helpers/Collections/Editor/Editor.tex}

@@ -1,66 +1,116 @@
 \documentclass[11pt]{article}
 
+\usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage{xcolor}
 \usepackage{graphicx}
-\usepackage{amsmath, amssymb}
 \usepackage{hyperref}
-\usepackage{geometry}
-\usepackage{listings}
-\usepackage{color}
 \usepackage{import}
-\usepackage{titlesec}
+\usepackage{listings}
 \usepackage{fancyhdr}
-\usepackage{tocloft}
+\usepackage{enumitem}
 
-\usepackage{minted}
+\setlength{\headheight}{14pt}
+\emergencystretch=3em
 
-% Configure page layout
-\geometry{a4paper, margin=1in}
-\pagestyle{fancy}
-\fancyhead[L]{MLGWorks.Utils Documentation}
-\fancyhead[R]{\today}
-\fancyfoot[C]{\thepage}
+\definecolor{codebg}{RGB}{247,248,250}
+\definecolor{codeframe}{RGB}{210,214,220}
+\definecolor{linkblue}{RGB}{35,92,145}
 
-% Listings settings
-\definecolor{lightgray}{gray}{0.95}
-\lstset{
-  backgroundcolor=\color{lightgray},
-  basicstyle=\ttfamily\small,
-  frame=single,
-  breaklines=true,
-  captionpos=b
+\hypersetup{
+  colorlinks=true,
+  linkcolor=linkblue,
+  urlcolor=linkblue,
+  pdftitle={MLGWorks.Utils Documentation},
+  pdfauthor={TrickShotMLG02}
 }
 
-\title{MLGWorks Utility Framework}
+\lstdefinelanguage{CSharp}{
+  morekeywords={public,private,protected,internal,static,class,struct,interface,enum,
+    using,namespace,return,new,if,else,for,foreach,in,out,where,void,bool,int,float,
+    string,var,this,base,readonly,sealed,override,virtual,async,await,true,false,null},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]"
+}
+
+\lstset{
+  language=CSharp,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{codeframe},
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue!60!black},
+  commentstyle=\color{gray!80!black},
+  stringstyle=\color{green!40!black},
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false
+}
+
+\pagestyle{fancy}
+\fancyhead[L]{MLGWorks.Utils}
+\fancyhead[R]{Documentation}
+\fancyfoot[C]{\thepage}
+
+\title{MLGWorks.Utils\\[0.3em]\large Practical Unity utilities and patterns}
 \author{TrickShotMLG02}
 \date{\today}
 
 \begin{document}
 
 \maketitle
-\newpage
+\begin{abstract}
+MLGWorks.Utils is a small Unity assembly for reusable infrastructure: serializable collections, pooling, timing, scene loading, dependency injection, logging, and everyday gameplay patterns. This document follows the source tree and focuses on how the current implementation is meant to be used.
+\end{abstract}
+
 \tableofcontents
 \newpage
 
-% --- Include all sections below ---
+\section{Getting Started}
+The code is delivered as an embedded Unity assembly through \texttt{MLGWorks.Utils.asmdef}. Add the repository below \texttt{Assets/MLGWorks.Utils} in a consuming project, or copy the folder into an existing Unity project. The examples assume Unity 6 and the namespaces shown in each section.
 
-% --- Into and Pre-amble ---
-%\subimport{intro/}{intro.tex} \newpage
+Most types are ordinary C\# classes and can be constructed and tested without a MonoBehaviour. Unity-facing helpers are kept in the relevant \texttt{Unity} or \texttt{Editor} folders.
 
+\begin{lstlisting}
+using MLGWorks.Utils.Helpers.Unity;
 
-% --- Helpers ---
-\subimport{Helpers/}{Timer.tex} \newpage
+var values = new[] { "red", "green", "blue" };
+var shuffled = values.Shuffled();
+\end{lstlisting}
 
+\newpage
 
-% --- Patterns ---
-\subimport{Patterns/}{EventBus.tex} \newpage
-\subimport{Patterns/}{Singleton.tex} \newpage
-\subimport{Patterns/}{StateMachine.tex} \newpage
+% The order here mirrors Assets/MLGWorks.Utils/Utils.
+\clearpage
+\subimport{Helpers/}{Timer.tex}
+\clearpage
+\subimport{Helpers/}{Collections/Collections.tex}
+\clearpage
+\subimport{Helpers/}{Pooling/Pooling.tex}
+\clearpage
+\subimport{Helpers/}{Timing/Timing.tex}
+\clearpage
+\subimport{Helpers/}{Scene Management/SceneManagement.tex}
+\clearpage
+\subimport{Helpers/}{Unity/Unity.tex}
 
+\clearpage
+\subimport{Dependency Injection/}{DependencyInjection.tex}
+\clearpage
+\subimport{Logging/}{Logging.tex}
 
-% --- Systems ---
-\subimport{Dependency Injection/}{DependencyInjection.tex} \newpage
-\subimport{Logging/}{Logging.tex} \newpage
-
+\clearpage
+\subimport{Patterns/}{CompositeDisposable.tex}
+\clearpage
+\subimport{Patterns/}{EventBus.tex}
+\clearpage
+\subimport{Patterns/}{Singletons/Singletons.tex}
+\clearpage
+\subimport{Patterns/}{StateMachine/StateMachine.tex}
 
 \end{document}

@@ -1,0 +1,27 @@
+\texttt{ObjectPool<T>} owns a factory, inactive objects, checked-out objects, and optional lifecycle callbacks. It is not thread-safe and does not impose a reset convention, although objects implementing \texttt{IPoolable} automatically receive \texttt{OnPoolAcquire()} and \texttt{OnPoolRelease()} calls.
+
+\begin{lstlisting}
+using MLGWorks.Utils.Helpers.Pooling.Core;
+
+var pool = new ObjectPool<List<int>>(
+    factory: () => new List<int>(),
+    onRelease: list => list.Clear(),
+    initialCapacity: 4,
+    maxCapacity: 16);
+
+List<int> values = pool.Get();
+values.Add(42);
+pool.Release(values);
+pool.Dispose();
+\end{lstlisting}
+
+The main operations are:
+\begin{itemize}
+  \item \texttt{Get()} and \texttt{GetMany(...)} acquire objects and mark them active.
+  \item \texttt{Release(...)} and \texttt{ReleaseMany(...)} return active objects or destroy them when the retention limit is reached.
+  \item \texttt{Prewarm(...)} creates all requested inactive objects immediately.
+  \item \texttt{PrewarmStep(...)} creates up to a requested number, making it possible to spread a large warm-up across frames.
+  \item \texttt{Clear()} destroys inactive objects; \texttt{Dispose()} destroys everything and prevents further use.
+\end{itemize}
+
+\texttt{CountInactive}, \texttt{CountActive}, and \texttt{CountAll} expose pool size. A null factory result, use after disposal, invalid release, or invalid capacity is reported with an exception.

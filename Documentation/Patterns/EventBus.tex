@@ -1,88 +1,23 @@
-\section{Event Bus}
-\label{sec:event_bus}
+\section{Event bus}
+\label{sec:event-bus}
 
-\subsection{Overview}
-The \texttt{EventBus} in \texttt{MLGWorks.Utils.Patterns} provides a static publish-subscribe (pub-sub) messaging system for decoupled communication across game systems. Components can subscribe to specific event types and respond when those events are published.
+The static \texttt{EventBus} provides typed publish/subscribe communication without requiring publishers to know their subscribers. An event implements \texttt{IEvent}, which exposes a human-readable \texttt{Name}.
 
-\subsection{Design}
-\begin{itemize}
-  \item Events must implement the \texttt{IEvent} interface.
-  \item Subscriptions are strongly typed and internally wrapped into generic \texttt{Action<IEvent>} delegates.
-  \item Subscriptions are stored in a \texttt{Dictionary<Type, List<Action<IEvent>>>}.
-  \item A second dictionary maps original delegates to wrapped delegates to support clean unsubscription.
-\end{itemize}
+\begin{lstlisting}
+using MLGWorks.Utils.Patterns;
 
-\subsection{Interface: \texttt{IEvent}}
-Events must implement:
-\begin{verbatim}
-public interface IEvent
+public sealed class PlayerDied : IEvent
 {
-    string Name { get; }
-}
-\end{verbatim}
-
-This allows each event to optionally include a name identifier (for logging or debugging).
-
-\subsection{Subscribing to Events}
-Use the \texttt{Subscribe<T>} method to listen for a specific event type:
-\begin{verbatim}
-EventBus.Subscribe<PlayerDiedEvent>(OnPlayerDied);
-\end{verbatim}
-
-Where:
-\begin{verbatim}
-void OnPlayerDied(PlayerDiedEvent e)
-{
-    Debug.Log($"{e.PlayerName} has died.");
-}
-\end{verbatim}
-
-\subsection{Unsubscribing from Events}
-Use the \texttt{Unsubscribe<T>} method to detach a listener:
-\begin{verbatim}
-EventBus.Unsubscribe<PlayerDiedEvent>(OnPlayerDied);
-\end{verbatim}
-
-If the method was not subscribed, or was already removed, the call is ignored safely.
-
-\subsection{Publishing Events}
-Events are published using the \texttt{Publish<T>} method:
-\begin{verbatim}
-var evt = new PlayerDiedEvent("Alice");
-EventBus.Publish(evt);
-\end{verbatim}
-
-All listeners registered for \texttt{PlayerDiedEvent} will be notified immediately.
-
-\subsection{Implementation Summary}
-\begin{itemize}
-  \item Uses reflection-safe generic method calls.
-  \item Event delegation is wrapped and tracked via \texttt{\_delegateMap}.
-  \item Subscribers are stored per event type.
-  \item Supports any class implementing \texttt{IEvent}.
-\end{itemize}
-
-\subsection{Example Event Type}
-\begin{verbatim}
-public class PlayerDiedEvent : IEvent
-{
-    public string PlayerName { get; }
-
     public string Name => "PlayerDied";
-
-    public PlayerDiedEvent(string playerName)
-    {
-        PlayerName = playerName;
-    }
+    public string PlayerName { get; }
+    public PlayerDied(string playerName) => PlayerName = playerName;
 }
-\end{verbatim}
 
-\subsection{Threading Note}
-The \texttt{EventBus} is not thread-safe. All usage should occur from the main Unity thread unless explicitly modified for concurrency.
+IDisposable subscription = EventBus.Subscribe<PlayerDied>(OnPlayerDied);
+EventBus.Publish(new PlayerDied("Alice"));
+subscription.Dispose();
+\end{lstlisting}
 
-\subsection{Use Cases}
-\begin{itemize}
-  \item Player health reaching zero → publish \texttt{PlayerDiedEvent}.
-  \item Game state changes → publish \texttt{GameStateChangedEvent}.
-  \item UI reacting to events without tight coupling.
-\end{itemize}
+\texttt{Subscribe<T>} returns an \texttt{IDisposable}; disposing it removes exactly that subscription and is safe to repeat. \texttt{Unsubscribe<T>} is also available when the original callback is convenient to retain.
+
+During publication the bus iterates over a snapshot, so a callback can dispose its own subscription or add another subscription without invalidating the current delivery. The bus itself is not thread-safe; use it from the Unity main thread.

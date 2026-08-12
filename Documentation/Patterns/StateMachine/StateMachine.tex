@@ -1,0 +1,31 @@
+\section{State machine}
+\label{sec:state-machine}
+
+The state-machine types under \texttt{Patterns/StateMachine} provide a small, testable finite-state machine. A state implements \texttt{IState}; a transition connects a source to a target; and an optional \texttt{ITransitionCondition} decides whether a conditional transition is ready.
+
+\subsection{States and transitions}
+States receive \texttt{OnEnter()}, \texttt{OnExit()}, and \texttt{Tick()} callbacks. \texttt{UnconditionalTransition} always fires when its source is current. \texttt{ConditionalTransition} delegates its decision to an \texttt{ITransitionCondition}. Adding a transition associates the states and condition with the owning state machine through \texttt{SetFSM}.
+
+\begin{lstlisting}
+using MLGWorks.Utils.Patterns.StateMachine;
+using MLGWorks.Utils.Patterns.StateMachine.Interfaces;
+
+sealed class IdleState : IState
+{
+    public void OnEnter() { }
+    public void OnExit() { }
+    public void Tick() { }
+    public void SetFSM(StateMachine fsm) { }
+}
+
+var machine = new StateMachine();
+var idle = new IdleState();
+machine.SetStartingState(idle);
+machine.AddTransition(idle, new RunningState());
+machine.Tick();
+\end{lstlisting}
+
+\subsection{Update behavior}
+Call \texttt{SetStartingState} before the first update. \texttt{ChangeState} immediately exits the old state and enters the new state. On \texttt{Tick()}, the machine evaluates registered transitions in order; if the first matching transition is ready, it changes state and returns. Otherwise it ticks the current state.
+
+\texttt{AddTransition(IState, IState)} is shorthand for an unconditional transition. Use \texttt{AddTransition(ITransition)} when a conditional transition or custom transition is needed. \texttt{ClearTransitions()} removes all registered transitions.

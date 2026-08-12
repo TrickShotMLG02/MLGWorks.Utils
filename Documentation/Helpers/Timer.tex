@@ -1,77 +1,37 @@
-\section{Timer Utility}
-\label{sec:timer_utility}
+\section{Timer}
+\label{sec:timer}
 
-\subsection{Overview}
-The \texttt{MLGWorks.Utils.Helpers.Timer} class is a lightweight, pure C\# utility for managing countdown timers with support for starting, pausing, resuming, and resetting. This is useful for implementing custom timing logic in non-MonoBehaviour systems.
+\texttt{MLGWorks.Utils.Helpers.Timer} is a plain C\# countdown timer. It owns no Unity object and advances only when the caller supplies a delta time. That makes it useful in a MonoBehaviour, a service, or a deterministic test.
 
-\subsection{Construction}
-To create a new timer, instantiate it with a duration in seconds:
-
-\begin{verbatim}
-Timer timer = new Timer(5f); // 5 second timer
-\end{verbatim}
-
-\subsection{Core Methods}
-
-\begin{description}
-    \item[\texttt{Start()}] Starts or restarts the timer from zero.
-    \item[\texttt{Reset()}] Stops and resets the timer to zero.
-    \item[\texttt{Pause()}] Temporarily stops the timer’s progress without resetting.
-    \item[\texttt{Resume()}] Continues a paused timer.
-    \item[\texttt{Update(deltaTime)}] Advances the timer’s internal clock by \texttt{deltaTime}. This should be called every frame:
-    \begin{verbatim}
-    timer.Update(Time.deltaTime);
-    \end{verbatim}
+\subsection{Lifecycle}
+\begin{description}[leftmargin=2.8cm,style=sameline]
+  \item[\texttt{Start()}] Resets elapsed time and starts the timer.
+  \item[\texttt{Pause()}] Freezes a running timer without resetting it.
+  \item[\texttt{Resume()}] Continues a paused timer.
+  \item[\texttt{Reset()}] Stops the timer and clears elapsed time.
+  \item[\texttt{Update(float)}] Advances the timer and fires \texttt{OnFinished} once at the duration.
 \end{description}
 
-\subsection{Properties}
+Useful state is exposed through \texttt{Duration}, \texttt{Elapsed}, \texttt{IsRunning}, \texttt{IsPaused}, and \texttt{IsFinished}.
 
-\begin{itemize}
-    \item \texttt{Duration} – The total time (in seconds) the timer is set for.
-    \item \texttt{Elapsed} – The current elapsed time.
-    \item \texttt{IsRunning} – True if the timer is active and not finished.
-    \item \texttt{IsPaused} – True if the timer is currently paused.
-    \item \texttt{IsFinished} – True if the timer has completed.
-\end{itemize}
+\begin{lstlisting}
+using MLGWorks.Utils.Helpers;
+using UnityEngine;
 
-\subsection{Events}
-
-\begin{description}
-    \item[\texttt{OnFinished}] Event that is fired exactly once when the timer reaches its duration. Useful for triggering delayed actions:
-    \begin{verbatim}
-    timer.OnFinished += () => Debug.Log("Timer complete!");
-    \end{verbatim}
-\end{description}
-
-\subsection{Typical Usage Example}
-\begin{verbatim}
-public class TimerExample : MonoBehaviour
+public sealed class RespawnTimer : MonoBehaviour
 {
-    private Timer myTimer;
+    private readonly Timer timer = new Timer(3f);
 
-    void Start()
+    private void Awake()
     {
-        myTimer = new Timer(3f);
-        myTimer.OnFinished += OnTimerDone;
-        myTimer.Start();
+        timer.OnFinished += Respawn;
+        timer.Start();
     }
 
-    void Update()
-    {
-        myTimer.Update(Time.deltaTime);
-    }
+    private void Update() => timer.Update(Time.deltaTime);
 
-    void OnTimerDone()
-    {
-        Debug.Log("Timer finished!");
-    }
+    private void Respawn() => Debug.Log("Respawn is ready.");
 }
-\end{verbatim}
+\end{lstlisting}
 
-\subsection{Use Cases}
-\begin{itemize}
-    \item Cooldown mechanics
-    \item Timeouts or delays
-    \item Non-MonoBehaviour timing in services or logic layers
-    \item Flexible, testable alternative to \texttt{Coroutine} or \texttt{Invoke}
-\end{itemize}
+\texttt{Start()} always starts from zero. When the timer reaches its duration, it clamps \texttt{Elapsed}, stops running, clears the paused state, and invokes the event.

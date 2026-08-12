@@ -1,0 +1,5 @@
+\texttt{ISceneTransition} separates visual transition work from scene loading. Its outgoing transition calls a callback when loading may begin; its incoming transition calls a callback when the transition is complete.
+
+\texttt{SceneLoader.LoadWithTransition(...)} returns a \texttt{SceneTransitionOperation} that combines the outgoing transition, the scene load, and the incoming transition. The operation exposes progress, completion, failure, \texttt{Cancel()}, and \texttt{Dispose()}.
+
+This keeps a fade, loading screen, or wipe effect reusable without coupling it to a particular scene or loading coordinator.

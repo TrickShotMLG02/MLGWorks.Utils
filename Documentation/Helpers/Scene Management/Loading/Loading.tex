@@ -1,0 +1,22 @@
+\texttt{SceneLoader} provides validated synchronous and asynchronous load and unload methods. It also exposes \texttt{CanLoad}, \texttt{IsLoaded}, and \texttt{GetLoadedScene}. Asynchronous loading returns \texttt{SceneLoadOperation}; unloading returns \texttt{SceneUnloadOperation}.
+
+\begin{lstlisting}
+using MLGWorks.Utils.Helpers.SceneManagement.Core;
+using MLGWorks.Utils.Helpers.SceneManagement.Loading;
+using UnityEngine.SceneManagement;
+
+public sealed class GameFlow
+{
+    public void LoadLevel(SceneReference level)
+    {
+        SceneLoader.LoadAsync(
+            level,
+            LoadSceneMode.Single,
+            setActiveScene: true,
+            onCompleted: scene => UnityEngine.Debug.Log(scene.name),
+            onFailed: error => UnityEngine.Debug.LogException(error));
+    }
+}
+\end{lstlisting}
+
+For a gameplay flow that may request the same scene more than once, use a load coordinator. It tracks active loads and reports progress when its owner calls \texttt{Tick()}. Duplicate requests either return the existing operation or throw, according to the configured duplicate-load policy. Dispose the coordinator when its owner is done.

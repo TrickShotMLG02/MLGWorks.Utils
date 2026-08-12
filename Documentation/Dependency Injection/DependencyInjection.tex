@@ -1,85 +1,38 @@
-\section{Dependency Injection System}
-\label{sec:dependency_injection}
+\section{Dependency injection}
+\label{sec:dependency-injection}
 
-\subsection{Overview}
-The \texttt{MLGWorks.Utils.DependencyInjection} system provides a lightweight and extensible approach to managing dependencies within Unity projects using a Service Locator pattern.
+The dependency-injection utilities provide a small service workflow for Unity projects. They do not require a container package: services are registered with \texttt{ServiceLocator}, fields or properties are marked with \texttt{[Inject]}, and \texttt{Injector} supplies matching services.
 
-This system supports:
-\begin{itemize}
-    \item Manual service registration for pure C\# classes and select MonoBehaviours.
-    \item Automatic dependency injection using attributes.
-    \item Lifecycle initialization via an interface.
-    \item Automatic registration of marked MonoBehaviours.
-\end{itemize}
+\subsection{Registering and resolving services}
+\texttt{ServiceLocator} registers one object per type and exposes \texttt{TryGet}, \texttt{GetAllServices}, and \texttt{Clear}. Registration is explicit, so startup order remains visible in the scene.
 
-\subsection{Registering Services}
+\begin{lstlisting}
+using MLGWorks.Utils.DependencyInjection;
 
-\subsubsection*{Pure C\# Services}
-Pure C\# services should be registered manually in a dedicated \texttt{ServiceBootstrapper} MonoBehaviour with a very early execution order:
+ServiceLocator.Register(typeof(GameSettings), new GameSettings());
 
-\begin{verbatim}
-// Example
-ServiceLocator.Register<Logger>(new Logger());
-ServiceLocator.Register<GameSettings>(new GameSettings());
-\end{verbatim}
-
-\texttt{ServiceBootstrapper} is executed during the \texttt{Awake()} phase and is responsible for setting up non-MonoBehaviour dependencies early in the lifecycle.
-
-\subsubsection*{MonoBehaviour Services}
-MonoBehaviours that are services and should be registered automatically must be marked with the \texttt{[DIService]} attribute:
-
-\begin{verbatim}
-[DIService]
-public class MyService : MonoBehaviour { }
-\end{verbatim}
-
-These services will be registered automatically during the \texttt{Awake()} phase of the \texttt{DIInitializer}, which runs after most other scripts.
-
-\subsection{Dependency Injection}
-
-To inject a service into a field, decorate it with the \texttt{[Inject]} attribute:
-
-\begin{verbatim}
-public class MyComponent : MonoBehaviour
+if (ServiceLocator.TryGet(typeof(GameSettings), out object value))
 {
-    [Inject] private Logger _logger;
-
-    private void Start()
-    {
-        _logger.Log("Injected successfully!");
-    }
+    GameSettings settings = (GameSettings)value;
 }
-\end{verbatim}
+\end{lstlisting}
 
-All MonoBehaviours in the scene (including inactive ones) are scanned and injected at runtime by the \texttt{DIInitializer}.
+\subsection{Injection}
+Mark a field or property with \texttt{[Inject]} and call \texttt{Injector.Inject(target)}. \texttt{DIInitializer} performs this work for scene objects, including inactive objects, and offers \texttt{InitializeNow()} when a caller needs to trigger the pass explicitly.
 
-\subsection{Lifecycle Initialization}
-If a MonoBehaviour needs to perform logic after injection is complete, it should implement the \texttt{IInitializable} interface:
-
-\begin{verbatim}
-public class MyComponent : MonoBehaviour, IInitializable
+\begin{lstlisting}
+public sealed class HudController : MonoBehaviour, IInitializable
 {
-    [Inject] private GameSettings _settings;
+    [Inject] private GameSettings settings;
 
     public void Initialize()
     {
-        Debug.Log("Initialized with settings: " + _settings);
+        ApplyTheme(settings.Theme);
     }
 }
-\end{verbatim}
+\end{lstlisting}
 
-\texttt{DIInitializer} will automatically call \texttt{Initialize()} after injecting dependencies.
+\subsection{Startup and auto-registration}
+\texttt{ServiceBootstrapper} is intended for registering core services early in the Unity lifecycle. A MonoBehaviour marked with \texttt{[DIService]} can be discovered and registered by the initializer. Implement \texttt{IInitializable} when a service needs a callback after injection is complete.
 
-\subsection{Execution Order}
-\begin{itemize}
-    \item \textbf{ServiceBootstrapper:} Runs early (\texttt{DefaultExecutionOrder = -1000}). Registers core services.
-    \item \textbf{DIInitializer:} Runs late (\texttt{DefaultExecutionOrder = 10000}). Injects dependencies and calls \texttt{Initialize()}.
-\end{itemize}
-
-\subsection{Best Practices}
-\begin{itemize}
-    \item Register all non-MonoBehaviour services manually in \texttt{ServiceBootstrapper}.
-    \item Use \texttt{[DIService]} to mark MonoBehaviours that should be registered automatically.
-    \item Avoid registering the same type multiple times to prevent conflicts.
-    \item Use \texttt{IInitializable} for post-injection setup logic.
-\end{itemize}
+The attribute types live under \texttt{Dependency Injection/Attributes}; the runtime types remain in the parent namespace \texttt{MLGWorks.Utils.DependencyInjection}.

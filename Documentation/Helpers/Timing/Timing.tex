@@ -1,0 +1,35 @@
+\section{Timing helpers}
+\label{sec:timing}
+
+The stateful timing helpers under \texttt{Helpers/Timing} are ordinary C\# objects. The caller supplies time, which keeps them useful in both Unity update loops and tests.
+
+\subsection{Cooldown}
+\texttt{Cooldown} exposes \texttt{Duration}, \texttt{Remaining}, \texttt{CanConsume}, and \texttt{IsActive}. Call \texttt{TryConsume()} to start the cooldown only when it is ready, then call \texttt{Update(deltaTime)} each frame.
+
+\begin{lstlisting}
+var attackCooldown = new Cooldown(0.5f);
+
+if (attackCooldown.TryConsume())
+{
+    Attack();
+}
+
+attackCooldown.Update(Time.deltaTime);
+\end{lstlisting}
+
+\texttt{Start()} restarts the configured duration and \texttt{Reset()} returns the cooldown to its ready state.
+
+\subsection{RateLimiter}
+\texttt{RateLimiter} limits acquisitions in a rolling window. Construct it with a maximum number of uses and a window length, then pass a monotonic timestamp to \texttt{TryAcquire(double)}.
+
+\begin{lstlisting}
+var limiter = new RateLimiter(maxUses: 3, windowSeconds: 1.0);
+double now = Time.realtimeSinceStartupAsDouble;
+
+if (limiter.TryAcquire(now))
+{
+    SendRequest();
+}
+\end{lstlisting}
+
+Timestamps must be finite and must not move backwards. \texttt{Reset()} clears the recorded acquisition times.
