@@ -1,3 +1,4 @@
+using MLGWorks.Utils.Patterns.Singletons;
 using MLGWorks.Utils.Patterns;
 using NUnit.Framework;
 using System.Collections;
@@ -17,6 +18,12 @@ namespace MLGWorks.Utils.Tests.Patterns
         [ExecuteAlways]
         private class TestSingleton : Singleton<TestSingleton>
         { }
+
+        private sealed class TestPureSingleton : PureSingleton<TestPureSingleton>
+        {
+            public TestPureSingleton()
+            { }
+        }
 
         [UnityTearDown]
         public IEnumerator TearDown()
@@ -105,6 +112,12 @@ namespace MLGWorks.Utils.Tests.Patterns
             {
                 var unused = TestSingleton.Instance;
             });
+        }
+
+        [Test]
+        public void PureSingleton_CreatesAndSharesInstance()
+        {
+            Assert.AreSame(TestPureSingleton.Instance, TestPureSingleton.Instance);
         }
     }
 }

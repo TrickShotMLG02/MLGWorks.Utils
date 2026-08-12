@@ -99,10 +99,12 @@ This is a good fit for project-level services such as save systems, audio, confi
 
 - `EventBus` publishes strongly typed events through `IEvent`; `EventSubscription` and `CompositeDisposable` make unsubscription explicit and easy to group.
 - `StateMachine` uses `IState`, `ITransition`, and `ITransitionCondition` to model state changes, with both conditional and unconditional transitions.
-- `Singleton<T>` provides a Unity `MonoBehaviour` singleton base for components that should have one project-wide instance.
+- `Singleton<T>` provides a Unity `MonoBehaviour` singleton base for scene components, while `PureSingleton<T>` provides lazy singleton access for regular C# classes.
 - `DontDestroyOnLoad` is a small component helper for preserving objects between scene loads.
 
 These patterns are independent: an event-driven system does not need to adopt the state machine or singleton helpers.
+
+Both singleton bases live in the [`MLGWorks.Utils.Patterns.Singletons`](Utils/Patterns/Singletons) namespace. The Unity variant keeps scene lookup, duplicate destruction, and `Awake`/`OnDestroy` lifecycle handling; the pure C# variant has no Unity dependency and creates its instance on first access.
 
 </details>
 

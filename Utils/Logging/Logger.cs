@@ -1,4 +1,4 @@
-using MLGWorks.Utils.Patterns;
+using MLGWorks.Utils.Patterns.Singletons;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
