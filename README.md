@@ -303,4 +303,9 @@ Keep reusable code inside the `MLGWorks.Utils` assembly, add or update a focused
 
 ## 📄 License
 
-No license file is currently included in this repository. Confirm the intended license with the repository owner before redistributing the package.
+MLGWorks.Utils is released under the [MIT License](LICENSE). You may use,
+modify, and distribute the package, including in commercial projects, provided
+that the copyright and license notices are preserved.
+
+The MIT License applies only to original MLGWorks.Utils code and documentation.
+Third-party code and assets remain subject to their respective licenses.

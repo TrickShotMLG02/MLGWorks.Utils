@@ -4,6 +4,7 @@
   "displayName": "MLGWorks Utils",
   "description": "Reusable Unity runtime helpers, editor tooling, and lightweight gameplay patterns.",
   "unity": "6000.0",
+  "license": "MIT",
   "author": {
     "name": "MLGWorks",
     "url": "https://github.com/TrickShotMLG02"
