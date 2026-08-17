@@ -162,6 +162,22 @@ The random collection API is demonstrated in the [Quick start](#quick-start) sec
 
 ## 📦 Installation
 
+### Install through Unity Package Manager
+
+In the consuming Unity project, open **Window > Package Manager**, click **+**, choose **Add package from git URL**, and enter:
+
+```text
+https://github.com/TrickShotMLG02/MLGWorks.Utils.git
+```
+
+To install a specific release, append its Git tag or branch after `.git`, for example:
+
+```text
+https://github.com/TrickShotMLG02/MLGWorks.Utils.git#1.0.0
+```
+
+The package is identified as `com.mlgworks.utils`.
+
 ### Add as a Git submodule
 
 From the root of the Unity project that will consume the toolkit:

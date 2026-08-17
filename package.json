@@ -1,0 +1,12 @@
+{
+  "name": "com.mlgworks.utils",
+  "version": "1.0.0",
+  "displayName": "MLGWorks Utils",
+  "description": "Reusable Unity runtime helpers, editor tooling, and lightweight gameplay patterns.",
+  "unity": "6000.0",
+  "author": {
+    "name": "MLGWorks",
+    "url": "https://github.com/TrickShotMLG02"
+  },
+  "documentationUrl": "https://github.com/TrickShotMLG02/MLGWorks.Utils#readme"
+}
