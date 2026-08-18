@@ -51,14 +51,20 @@ crashlytics-build.properties
 
 ## Core latex/pdflatex auxiliary files:
 *.aux
+*.aux.meta
 *.lof
 *.log
+*.log.meta
 *.lot
 *.fls
+*.fls.meta
 *.out
+*.out.meta
 *.toc
+*.toc.meta
 *.fmt
 *.fot
+*.fdb_latexmk.meta
 *.cb
 *.cb2
 .*.lb
