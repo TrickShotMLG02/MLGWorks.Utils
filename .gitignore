@@ -49,10 +49,6 @@ sysinfo.txt
 crashlytics-build.properties
 
 
-## Ignore .meta files inside Documentation folder
-Documentation/**/*.meta
-
-
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
